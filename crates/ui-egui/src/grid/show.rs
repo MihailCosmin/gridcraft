@@ -809,7 +809,8 @@ fn paint_pages(app: &mut SheetApp, p: &Painter, geo: &Geo, sh: &Sheet) {
         printed = printed.union(r);
     }
     let pr = geo.range_rect(sh, printed);
-    let grey = Color32::from_black_alpha(70);
+    let t = Tokens::get(p.ctx());
+    let grey = t.sheet_page_outside;
     let c = p.clip_rect();
     for r in [
         Rect::from_min_max(c.min, pos2(c.right(), pr.top())),
@@ -821,7 +822,7 @@ fn paint_pages(app: &mut SheetApp, p: &Painter, geo: &Geo, sh: &Sheet) {
             p.rect_filled(r, 0.0, grey);
         }
     }
-    let blue = Color32::from_rgb(0x2E, 0x6F, 0xD8);
+    let blue = t.sheet_page_break;
     for (r, n) in pages {
         let rr = geo.range_rect(sh, *r);
         if !rr.intersects(c) {
@@ -838,7 +839,7 @@ fn paint_pages(app: &mut SheetApp, p: &Painter, geo: &Geo, sh: &Sheet) {
             Align2::CENTER_CENTER,
             format!("Page {n}"),
             theme::ui_bold((rr.height().min(rr.width()) / 6.0).clamp(14.0, 72.0)),
-            Color32::from_black_alpha(45),
+            t.sheet_page_watermark,
         );
     }
     p.rect_stroke(pr, 0.0, Stroke::new(3.0, blue), StrokeKind::Outside);

@@ -109,7 +109,7 @@
     {
       "id": "gridcraft-DS11",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "medium",
@@ -119,12 +119,12 @@
         "gridcraft-DS1",
         "gridcraft-DS2"
       ],
-      "done": null
+      "done": "2026-11-04T21:53:30"
     },
     {
       "id": "gridcraft-DS5",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "medium",
@@ -133,21 +133,21 @@
       "depends_on": [
         "gridcraft-DS2"
       ],
-      "done": null
+      "done": "2026-11-04T21:53:55"
     },
     {
       "id": "gridcraft-DS12",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "medium",
       "short": "Page Break Preview on a dark sheet: watermark, break lines, area outside print",
-      "details": "Page Break Preview draws a grey 'Page N' watermark, blue page-break lines and greys the area outside the print area; all assume white. Give them dark-sheet colours with readable contrast.",
+      "details": "Page Break Preview draws a grey 'Page N' watermark, blue page-break lines and greys the area outside the print area; all assume white. Give them dark-sheet colours with readable contrast. Done 04.11.2026: new SheetColors tokens page_outside, page_break, page_watermark (light values unchanged, dark: lifted blue line, white watermark, darker shade) used by grid/show.rs paint_pages; line contrast on the sheet checked in the theme contrast test; theme tests pass. Not looked at in a snapshot.",
       "depends_on": [
         "gridcraft-DS3"
       ],
-      "done": null
+      "done": "2026-11-04T21:54:20"
     },
     {
       "id": "gridcraft-DS6",

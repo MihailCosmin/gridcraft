@@ -136,6 +136,10 @@ pub struct Tokens {
     pub sheet_freeze_line: Color32,
     pub sheet_handle_halo: Color32,
     pub sheet_drag_outline: Color32,
+    /// Page Break Preview: the shade outside the print area, the page-break lines and the "Page N" watermark.
+    pub sheet_page_outside: Color32,
+    pub sheet_page_break: Color32,
+    pub sheet_page_watermark: Color32,
 }
 
 /// The eight category colours, in the order of [`Tokens::cat`].
@@ -222,6 +226,10 @@ pub struct SheetColors {
     pub handle_halo: Color32,
     /// The dashed fill-drag preview and the move-drag outline.
     pub drag_outline: Color32,
+    /// Page Break Preview: shade outside the print area, break lines, "Page N" watermark.
+    pub page_outside: Color32,
+    pub page_break: Color32,
+    pub page_watermark: Color32,
 }
 
 impl SheetColors {
@@ -251,6 +259,9 @@ impl SheetColors {
         freeze_line: rgb(0x949494),
         handle_halo: Color32::WHITE,
         drag_outline: rgb(0x646464),
+        page_outside: Color32::from_black_alpha(70),
+        page_break: rgb(0x2E6FD8),
+        page_watermark: Color32::from_black_alpha(45),
     };
 
     /// The dark sheet: WordCraft's paper grey `#333333`, light text, the same hues lifted.
@@ -278,6 +289,9 @@ impl SheetColors {
         freeze_line: rgb(0x8A8A8A),
         handle_halo: rgb(0x333333),
         drag_outline: rgb(0xC8C8C8),
+        page_outside: Color32::from_black_alpha(120),
+        page_break: rgb(0x6FA3F5),
+        page_watermark: Color32::from_rgba_premultiplied(70, 70, 70, 70),
     };
 
     /// The set for a sheet: dark when the dark sheet is on.
@@ -401,6 +415,9 @@ impl Tokens {
             sheet_freeze_line: sheet.freeze_line,
             sheet_handle_halo: sheet.handle_halo,
             sheet_drag_outline: sheet.drag_outline,
+            sheet_page_outside: sheet.page_outside,
+            sheet_page_break: sheet.page_break,
+            sheet_page_watermark: sheet.page_watermark,
         }
     }
 
@@ -642,6 +659,7 @@ mod contrast_tests {
         add("trace error arrow on sheet", t.sheet_trace_error, t.grid_bg, GLYPH);
         add("frozen-pane line on sheet", t.sheet_freeze_line, t.grid_bg, GLYPH);
         add("drag outline on sheet", t.sheet_drag_outline, t.grid_bg, GLYPH);
+        add("page-break line on sheet", t.sheet_page_break, t.grid_bg, GLYPH);
         add("fill-handle fill on its halo", t.sel_border, t.sheet_handle_halo, GLYPH);
         // The macro step editor: breakpoint dots in the gutter, error markers, the current step.
         add("breakpoint on window", t.breakpoint, t.window, GLYPH);
@@ -708,6 +726,7 @@ mod contrast_tests {
                 (t.sheet_macro_input, t.sheet_macro_footprint, t.sheet_macro_conflict, t.sheet_macro_target),
                 (t.sheet_py_tag, t.on_sheet_py_tag, t.sheet_trace_arrow, t.sheet_trace_error),
                 (t.sheet_freeze_line, t.sheet_handle_halo, t.sheet_drag_outline),
+                (t.sheet_page_outside, t.sheet_page_break, t.sheet_page_watermark),
             )
         };
         // Display theme alone never changes the sheet, in either sheet.
