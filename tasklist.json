@@ -152,7 +152,7 @@
     {
       "id": "gridcraft-DS6",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "medium",
@@ -161,7 +161,7 @@
       "depends_on": [
         "gridcraft-DS4"
       ],
-      "done": null
+      "done": "2026-11-04T21:56:10"
     },
     {
       "id": "gridcraft-DS14",
@@ -180,16 +180,16 @@
     {
       "id": "gridcraft-DS7",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "medium",
       "short": "Theme switch repaints sheet instantly; persists; command and control parity",
-      "details": "view.theme (system/light/dark) must repaint the sheet area at once; System follows the OS live (crates/ui-egui/tests/it/system_theme.rs). Confirm persistence (app/prefs.rs); add a ui.screenshot control-channel test.",
+      "details": "view.theme (system/light/dark) must repaint the sheet area at once; System follows the OS live (crates/ui-egui/tests/it/system_theme.rs). Confirm persistence (app/prefs.rs); add a ui.screenshot control-channel test. Done 04.11.2026: view.theme already repaints at once (Tokens::get reads the egui visuals and the dark-sheet flag every frame; the sheet follows only view.darkSheet, per the DS1 design); persistence confirmed (UiState dark, systemTheme, darkSheet in ui.json). Added crates/ui-egui/tests/it/dark_sheet_theme.rs: control-channel engine.execute view.theme/view.darkSheet over the four combinations with pixel checks (interface vs sheet), save/restore, ui.screenshot request after a switch; system_theme tests still pass.",
       "depends_on": [
         "gridcraft-DS3"
       ],
-      "done": null
+      "done": "2026-11-04T21:59:00"
     },
     {
       "id": "gridcraft-DS8",
@@ -268,11 +268,12 @@
     {
       "id": "gridcraft-H3",
       "section": "human",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "short": "Choose the dark-sheet command id: reuse view.darkMode or a new id (view.darkSheet)",
       "details": "The decided id view.darkMode (as WordCraft) is already taken in GridCraft: it is the older light/dark INTERFACE switch (crates/ui-egui/src/app/commands.rs:180, the title-bar Dark Mode button in ribbon/title_bar.rs:154, tests/it/system_theme.rs:140-147, documented as legacy in docs/control-protocol.md:123). Options: (a, recommended) keep view.darkMode as the interface switch and give the dark sheet a new id, view.darkSheet, with WordCraft's places and labels (View > Switch Modes, File > Options checkbox); nothing breaks for control-channel, CLI or MCP clients, and the PR invites the maintainers to rename it. (b) Reuse view.darkMode for the dark sheet exactly as WordCraft; the title-bar button moves to view.theme, and every client that calls view.darkMode {on:true} to get a dark interface gets a dark sheet instead (a breaking change the PR must announce in CHANGELOG/control-protocol.md). (c) Another id you name. Answer in the task: a, b or the id. Design: docs/dark-sheet.md (Command).",
-      "done": null
+      "answer": "why can't we use view.darkMode for both the interface and the sheet ?\n\nthat's how it should work anyway\n\nselecting \"Display theme\": Dark should change both the interface and the sheet theme",
+      "done": "2026-11-04T22:00:26"
     },
     {
       "id": "gridcraft-N1",
