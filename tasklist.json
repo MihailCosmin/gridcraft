@@ -315,6 +315,17 @@
       "short": "Remove the MSI Rust from PATH so cargo uses rustup (cargo xtask wasm needs it)",
       "details": "cargo xtask wasm still fails with E0463 after H4: cargo and rustc on PATH come from a separate Rust MSI install, C:\\Program Files\\Rust stable MSVC 1.99\\bin, listed in the Machine PATH (and again in the User PATH) ahead of C:\\Users\\Cosmin\\.cargo\\bin. That install has no wasm32 standard library; rustup's stable 1.99 toolchain (where H4 added the target) is the same version. Recommended: Settings > Apps > Installed apps > 'Rust stable MSVC 1.99' > Uninstall (administrator); then remove C:\\Program Files\\Rust stable MSVC 1.99\\bin from the User PATH (Settings > System > About > Advanced system settings > Environment Variables > Path), and open new terminals. Check: (Get-Command cargo).Source shows C:\\Users\\Cosmin\\.cargo\\bin\\cargo.exe and cargo xtask wasm ends with 'ok'. Until then a session can run the gate with the rustup toolchain first on PATH: $tc=\"$env:USERPROFILE\\.rustup\\toolchains\\stable-x86_64-pc-windows-msvc\\bin\"; $env:PATH=\"$tc;$env:PATH\"; $env:RUSTC=\"$tc\\rustc.exe\"; cargo xtask wasm (passes, checked 04.11.2026).",
       "done": null
+    },
+    {
+      "id": "gridcraft-N3",
+      "section": "rework",
+      "status": "todo",
+      "group": "Functions",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "IMSQRT last digit differs on Windows: engineering::tests::complex_numbers fails",
+      "details": "Daily run 04.11.2026 (cargo test --workspace, Windows, rustc 1.99): crates/functions/src/engineering.rs:604 in engineering::tests::complex_numbers expects Text(\"0.707106781186548+0.707106781186547i\") but gets \"0.707106781186548+0.707106781186548i\" (the 15th significant digit of the imaginary part). Probably a platform libm difference in atan2/sin/cos (unverified). sqrt(2)/2 = 0.70710678118654752..., which rounds to ...548 at 15 significant digits for both parts, so the expected string may be the one to fix; check against Excel observation if possible. Make the result platform-independent (exact special cases or consistent 15-digit rounding) and keep the test strict. Rerun: cargo test -p gridcraft-functions --lib engineering.",
+      "done": null
     }
   ]
 }

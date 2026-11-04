@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "repo": "gridcraft",
+  "command": "cargo test --workspace --no-fail-fast",
+  "runs": [
+    {
+      "date": "2026-11-04",
+      "at": "2026-11-04T22:27:09",
+      "machine": "DESKTOP-C1OMHF2",
+      "commit": "41750bec",
+      "result": "fail",
+      "summary": "3400 passed, 3 failed, 1 ignored, about 10 min (first build included). Failures: gridcraft-functions engineering::tests::complex_numbers (last digit of IMSQRT imaginary part, rework gridcraft-N3); gridcraft-ui-egui it interaction::column_autocomplete_folds_case_beyond_ascii and interaction::language_switch_renders_the_ribbon_and_persists (missing glyph panics, rework gridcraft-N2)"
+    }
+  ]
+}
