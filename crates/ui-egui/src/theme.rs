@@ -435,6 +435,86 @@ pub fn contrast(a: Color32, b: Color32) -> f32 {
     (la.max(lb) + 0.05) / (la.min(lb) + 0.05)
 }
 
+/// The grey a white page becomes on the dark sheet (WordCraft's `DARK_PAPER`, `#333333`).
+pub const DARK_PAPER: u8 = 0x33;
+
+/// Least contrast the guard keeps for cell text (WCAG 2 AA) and for borders (non-text).
+pub const INK_TEXT_MIN: f32 = 4.5;
+pub const INK_LINE_MIN: f32 = 3.0;
+
+/// The dark-sheet colour rule (`docs/dark-sheet.md`) for one workbook colour: invert its HSL
+/// lightness, keeping hue and saturation, then lift the blacks to [`DARK_PAPER`]. White becomes
+/// the sheet grey, black becomes white, pure hues barely change. Alpha is kept.
+pub fn ink(c: Color32) -> Color32 {
+    let [r, g, b, a] = c.to_srgba_unmultiplied();
+    let (hi, lo) = (i32::from(r.max(g).max(b)), i32::from(r.min(g).min(b)));
+    let d = 255 - hi - lo;
+    let p = i32::from(DARK_PAPER);
+    let map = |v: u8| {
+        let inverted = (i32::from(v) + d).clamp(0, 255);
+        u8::try_from(p + inverted * (255 - p) / 255).unwrap_or(u8::MAX)
+    };
+    Color32::from_rgba_unmultiplied(map(r), map(g), map(b), a)
+}
+
+/// [`ink`] for a colour drawn over another workbook colour (text over its cell's fill, a border
+/// beside it), with the contrast guard: if the mapped pair reads worse than
+/// `min(min_ratio, contrast of the authored pair)`, the ink's HSL lightness moves away from the
+/// background, hue kept, until it does (or reaches white or black). `fg` and `bg` are the
+/// authored colours; the result goes on `ink(bg)`. A pair the author made illegible (white on
+/// white) stays so. Results are cached, so a large sheet pays for each pair once.
+pub fn ink_guarded(fg: Color32, bg: Color32, min_ratio: f32) -> Color32 {
+    type Key = ([u8; 4], [u8; 4], u32);
+    thread_local! {
+        static CACHE: std::cell::RefCell<std::collections::HashMap<Key, Color32>> = std::cell::RefCell::default();
+    }
+    /// Distinct pairs kept before the cache starts over (a sheet has a few dozen).
+    const CAP: usize = 4096;
+    let key = (fg.to_array(), bg.to_array(), min_ratio.to_bits());
+    let cached = CACHE.try_with(|c| c.try_borrow().ok().and_then(|m| m.get(&key).copied())).ok().flatten();
+    if let Some(hit) = cached {
+        return hit;
+    }
+    let out = guard_ink(fg, bg, min_ratio);
+    let _ = CACHE.try_with(|c| {
+        if let Ok(mut m) = c.try_borrow_mut() {
+            if m.len() >= CAP {
+                m.clear();
+            }
+            m.insert(key, out);
+        }
+    });
+    out
+}
+
+fn opaque(c: Color32) -> Color32 {
+    let [r, g, b, _] = c.to_srgba_unmultiplied();
+    Color32::from_rgb(r, g, b)
+}
+
+fn guard_ink(fg: Color32, bg: Color32, min_ratio: f32) -> Color32 {
+    let target = min_ratio.min(contrast(opaque(fg), opaque(bg)));
+    let (fg_ink, bg_ink) = (ink(fg), opaque(ink(bg)));
+    if contrast(opaque(fg_ink), bg_ink) >= target {
+        return fg_ink;
+    }
+    use gridcraft_engine::model::style::{hsl_to_rgb, rgb_to_hsl};
+    let [r, g, b, a] = fg_ink.to_srgba_unmultiplied();
+    let (h, s, l0) = rgb_to_hsl([r, g, b]);
+    // Lighter on a background that white reads better on, darker otherwise.
+    let up = contrast(Color32::WHITE, bg_ink) >= contrast(Color32::BLACK, bg_ink);
+    let mut best = fg_ink;
+    for step in 1..=50 {
+        let l = if up { l0 + f64::from(step) * 0.02 } else { l0 - f64::from(step) * 0.02 }.clamp(0.0, 1.0);
+        let [r, g, b] = hsl_to_rgb(h, s, l);
+        best = Color32::from_rgba_unmultiplied(r, g, b, a);
+        if contrast(Color32::from_rgb(r, g, b), bg_ink) >= target || l <= 0.0 || l >= 1.0 {
+            break;
+        }
+    }
+    best
+}
+
 /// Installs light and dark token visuals in both theme slots, keeps the 2-3 px widget and 8-10 px window/menu corner radii from 0.36, and sets spacing, text styles and the active theme.
 pub fn apply(ctx: &egui::Context, dark: bool) {
     // Install both palettes before System can switch between the style slots.
@@ -676,6 +756,70 @@ mod contrast_tests {
         assert_eq!(t.grid_bg, SheetColors::DARK.grid_bg);
         set_dark_sheet(&ctx, false);
         assert_eq!(Tokens::get(&ctx).grid_bg, Color32::WHITE);
+    }
+
+    #[test]
+    fn ink_inverts_lightness_and_lifts_to_the_sheet_grey() {
+        // The design note's examples.
+        assert_eq!(ink(Color32::WHITE), rgb(0x333333));
+        assert_eq!(ink(Color32::BLACK), Color32::WHITE);
+        assert_eq!(ink(rgb(0x1F4E79)), rgb(0x9EC3E6), "dark blue heading → light blue");
+        assert_eq!(ink(rgb(0xDDEBF7)), rgb(0x39444E), "pale fill → deep fill");
+        assert_eq!(ink(rgb(0x0563C1)), rgb(0x64AFFB), "hyperlink blue");
+        assert_eq!(ink(rgb(0xFF0000)), rgb(0xFF3333), "pure hues keep their lightness");
+        // The dark sheet's own background, gridline and automatic text are the rule applied to the
+        // light sheet's.
+        for (light, dark) in [
+            (SheetColors::LIGHT.grid_bg, SheetColors::DARK.grid_bg),
+            (SheetColors::LIGHT.gridline, SheetColors::DARK.gridline),
+            (SheetColors::LIGHT.cell_text, SheetColors::DARK.cell_text),
+        ] {
+            assert_eq!(ink(light), dark);
+        }
+        assert_eq!(ink(Color32::from_rgba_unmultiplied(0, 0, 0, 128)).a(), 128, "alpha kept");
+    }
+
+    #[test]
+    fn the_guard_restores_legibility_without_beating_the_author() {
+        let white = Color32::WHITE;
+        // Blue text on the sheet: 8.6:1 on white, 1.8:1 once mapped; lifted to 4.5:1, still blue.
+        let blue = ink_guarded(rgb(0x0000FF), white, INK_TEXT_MIN);
+        assert!(contrast(blue, ink(white)) >= 4.5, "{blue:?}");
+        assert!(blue.b() > blue.r() && blue.b() > blue.g(), "hue kept: {blue:?}");
+        // Automatic text on a yellow fill: white on yellow would be 1.1:1, so it goes dark.
+        let yellow = rgb(0xFFFF00);
+        let on_yellow = ink_guarded(Color32::BLACK, yellow, INK_TEXT_MIN);
+        assert!(contrast(on_yellow, ink(yellow)) >= 4.5, "{on_yellow:?}");
+        // [Red]: 4.0:1 on white, so 4.0:1 is enough on the dark sheet.
+        let red = ink_guarded(rgb(0xFF0000), white, INK_TEXT_MIN);
+        assert!(contrast(red, ink(white)) >= contrast(rgb(0xFF0000), white) - 0.01, "{red:?}");
+        // Pairs that already read stay exactly ink().
+        for c in [Color32::BLACK, rgb(0x1F4E79), rgb(0x0563C1)] {
+            assert_eq!(ink_guarded(c, white, INK_TEXT_MIN), ink(c));
+        }
+        // Text hidden by its author (white on white) stays hidden.
+        assert_eq!(ink_guarded(white, white, INK_TEXT_MIN), ink(white));
+        // Borders are held to 3:1, and the cache answers the same the second time.
+        let line = ink_guarded(rgb(0x0000FF), white, INK_LINE_MIN);
+        assert!(contrast(line, ink(white)) >= 3.0);
+        assert_eq!(ink_guarded(rgb(0x0000FF), white, INK_LINE_MIN), line);
+    }
+
+    #[test]
+    fn every_guarded_pair_reads_at_least_as_well_as_authored_or_at_the_minimum() {
+        let colours: Vec<Color32> = (0..=255u8)
+            .step_by(51)
+            .flat_map(|r| (0..=255u8).step_by(51).flat_map(move |g| (0..=255u8).step_by(85).map(move |b| Color32::from_rgb(r, g, b))))
+            .collect();
+        for &fg in &colours {
+            for &bg in &colours {
+                let target = INK_TEXT_MIN.min(contrast(fg, bg));
+                let got = contrast(ink_guarded(fg, bg, INK_TEXT_MIN), ink(bg));
+                // White or black is as far as the guard can go.
+                let best = contrast(Color32::WHITE, ink(bg)).max(contrast(Color32::BLACK, ink(bg)));
+                assert!(got >= target.min(best) - 0.05, "{fg:?} on {bg:?}: {got:.2} < {target:.2}");
+            }
+        }
     }
 }
 

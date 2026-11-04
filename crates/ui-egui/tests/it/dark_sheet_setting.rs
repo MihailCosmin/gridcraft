@@ -97,3 +97,36 @@ fn the_grid_paints_the_sheet_tokens_light_or_dark() {
     let (cell, line) = cell_and_gridline_pixels(&mut h, "F12").unwrap();
     assert_eq!((cell, line), ([255; 3], [255; 3]));
 }
+
+/// The pixels inside cell `a1`, or `None` where there is no GPU to render with.
+fn cell_pixels(h: &mut egui_kittest::Harness<'static, SheetApp>, a1: &str) -> Option<Vec<[u8; 3]>> {
+    let image = h.render().ok()?;
+    let sh = h.state().session.active()?.wb.active()?;
+    let r = h.state().grid.geo.as_ref()?.screen_cell_rect(sh, gridcraft_engine::core::CellRef::parse(a1)?).shrink(3.0);
+    let ppp = h.ctx.pixels_per_point();
+    let (x0, x1, y0, y1) = ((r.left() * ppp) as u32, (r.right() * ppp) as u32, (r.top() * ppp) as u32, (r.bottom() * ppp) as u32);
+    Some((y0..y1).flat_map(|y| (x0..x1).map(move |x| (x, y))).map(|(x, y)| image.get_pixel(x, y)).map(|p| [p[0], p[1], p[2]]).collect())
+}
+
+#[test]
+fn cell_text_and_fills_follow_the_colour_rule_on_the_dark_sheet() {
+    let mut h = harness();
+    let app = h.state_mut();
+    app.run("cell.set", json!({"cell": "D8", "input": "WWWWWW"})).unwrap();
+    app.run("home.fillColor", json!({"range": "F8", "color": "#DDEBF7"})).unwrap();
+    app.run("selection.set", json!({"cell": "A1"})).unwrap();
+    h.run_steps(3);
+    let Some(text) = cell_pixels(&mut h, "D8") else { return };
+    let fill = cell_pixels(&mut h, "F8").unwrap();
+    // Light sheet: black text on white, the fill as authored.
+    assert!(text.iter().any(|p| p.iter().all(|&v| v < 60)), "black glyphs on the light sheet");
+    assert!(fill.iter().all(|p| *p == [0xDD, 0xEB, 0xF7]));
+    h.state_mut().run("view.darkSheet", json!({"on": true})).unwrap();
+    h.run_steps(3);
+    let text = cell_pixels(&mut h, "D8").unwrap();
+    let fill = cell_pixels(&mut h, "F8").unwrap();
+    // Dark sheet: automatic text is light on #333333, the pale fill becomes the deep #39444E.
+    assert!(text.iter().any(|p| p.iter().all(|&v| v > 200)), "light glyphs on the dark sheet");
+    assert!(text.iter().all(|p| p.iter().all(|&v| v >= 0x33)), "nothing darker than the sheet");
+    assert!(fill.iter().all(|p| *p == [0x39, 0x44, 0x4E]), "{:?}", fill.first());
+}

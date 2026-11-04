@@ -1,11 +1,11 @@
 # Dark sheet: design
 
-> **Last updated:** 2026-11-04 · **Change:** grid background, gridlines, selection and frozen lines paint from the tokens (DS3); cell colours not built yet · **Target:** a setting Excel does not have
+> **Last updated:** 2026-11-04 · **Change:** cell text, fills, borders, number-format colours, colour scales and data bars follow the colour rule (DS4) · **Target:** a setting Excel does not have
 
 A dark sheet shows the cells, not only the interface around them, light-on-dark. It is asked
 for in #1264 (and its duplicate #1736); WordCraft has the same feature for pages
 (storytold/wordcraft#194). This note fixes the behaviour and the colour rules so the code can
-be written in small, separate changes. Until it lands, the sheet is white in both themes. Built so far: the sheet colour tokens (DS2), the setting (DS15) and the grid itself (DS3: background, gridlines, merged-cell backdrop, selection, fill handle, drag outlines, frozen-pane lines).
+be written in small, separate changes. Until it lands, the sheet is white in both themes. Built so far: the sheet colour tokens (DS2), the setting (DS15), the grid itself (DS3: background, gridlines, merged-cell backdrop, selection, fill handle, drag outlines, frozen-pane lines) and the cells (DS4: `theme::ink` / `ink_guarded`; font colours of every kind, fills, pattern fills, borders, number-format colours, conditional-format fonts, fills, colour scales and data bars, table and cell styles, the in-cell editor). Not yet: charts, shapes, comments, sparklines and GridCraft's own overlays (DS5, DS10), dialog previews (DS14).
 
 ## What the user gets
 
@@ -180,3 +180,4 @@ held to WCAG 2 by `contrast_tests`.*
 | 2026-11-04 | new | Design: opt-in dark sheet, WordCraft colour rule with a contrast guard, token layout, command id open |
 | 2026-11-04 | DS2 | `theme::SheetColors` (LIGHT/DARK), `Tokens::palette(dark_ui, dark_sheet)`, `theme::set_dark_sheet` / `dark_sheet` (context flag read by `Tokens::get`), `Tokens::with_dark_sheet`; `contrast_tests` runs all four combinations |
 | 2026-11-04 | DS3 | `SheetColors` gains `freeze_line`, `handle_halo`, `drag_outline` (tokens `sheet_*`); the merged-cell backdrop, fill handle, drag outlines and frozen lines read tokens; split cursor follows Display theme; `snapshot --dark-sheet`; pixel test of background and gridlines |
+| 2026-11-04 | DS4 | `theme::ink`, `theme::ink_guarded` (cached per pair, `INK_TEXT_MIN` 4.5, `INK_LINE_MIN` 3); `grid/cell_paint.rs` `look(…, dark)` maps fills and text and keeps the authored `paper` for the guard; borders, `[Red]`-style colours and data bars mapped in `grid/quadrant.rs`; the in-cell editor paints the mapped fill with guarded automatic text; `model::style::rgb_to_hsl` / `hsl_to_rgb` public |
