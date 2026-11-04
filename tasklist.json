@@ -16,7 +16,7 @@
       "model": "opus",
       "effort": "high",
       "short": "Design: sheet-area dark palette and automatic-colour mapping rules",
-      "details": "Define how Display theme Dark affects the sheet area: dark grid background (~#1E1E1E/#262626), grid lines, row/column header strip, selection/active-cell outline, fill-handle, frozen-pane and page-break lines, scrollbars, sheet tabs. Key rule: the stored file never changes; only rendering maps colours. Automatic (unset) font colour renders light in dark; explicit colours (RGB or theme) render as authored; explicit dark text on dark background needs a contrast guard (WCAG 4.5 ratio, reuse theme.rs contrast checks). Decide whether authored fills are shown as authored (recommended) or inverted. Record in docs/ (design note) and observed-ui.md. Reference: user screenshot with Dark theme, sheet area dark, subtle grid lines, green row-header highlight.",
+      "details": "Define how Display theme Dark affects the sheet area: dark grid background (~#1E1E1E/#262626), grid lines, row/column header strip, selection/active-cell outline, fill-handle, frozen-pane and page-break lines, scrollbars, sheet tabs. Key rule: the stored file never changes; only rendering maps colours. Automatic (unset) font colour renders light in dark; explicit colours (RGB or theme) render as authored; explicit dark text on dark background needs a contrast guard (WCAG 4.5 ratio, reuse theme.rs contrast checks). Decide whether authored fills are shown as authored (recommended) or inverted. Record in docs/ (design note) and observed-ui.md. Reference: user screenshot with Dark theme, sheet area dark, subtle grid lines, green row-header highlight. Revisit the recorded rule 'the sheet stays white' (theme.rs module doc, theme.rs:95/103/122/157, docs/architecture.md 'UI building blocks', icons::paint_on_sheet) and replace it with the new one. Also decide: cells that store theme colour Text 1/Background 1 (dk1/lt1) explicitly (very common in Excel files) render like Automatic; hyperlink blue on dark; whether Dark also darkens the sheet by default or only with Switch Background on (DS15).",
       "done": null
     },
     {
@@ -27,7 +27,7 @@
       "model": "sonnet",
       "effort": "high",
       "short": "Add sheet-area tokens to theme::Tokens (grid_bg, grid_line, cell_text_auto, ...)",
-      "details": "crates/ui-egui/src/theme.rs: grid_bg is hard-coded Color32::WHITE (line ~212). Make grid_bg, grid line, automatic cell text, grid header text, selection tint and frozen-line colours dark/light picked tokens. Extend the contrast tests in theme.rs (cell text on grid_bg, grid line on grid_bg non-text ratio, selection).",
+      "details": "crates/ui-egui/src/theme.rs: grid_bg is hard-coded Color32::WHITE (line ~212). Make grid_bg, grid line, automatic cell text, grid header text, selection tint and frozen-line colours dark/light picked tokens. Extend the contrast tests in theme.rs (cell text on grid_bg, grid line on grid_bg non-text ratio, selection). The contrast_tests list must hold every sheet foreground/background pair in both themes.",
       "done": null,
       "depends_on": [
         "gridcraft-DS1"
@@ -48,6 +48,20 @@
       ]
     },
     {
+      "id": "gridcraft-DS10",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "high",
+      "short": "Give the fixed sheet_* tokens and paint_on_sheet dark values",
+      "details": "theme.rs keeps these the same in both themes because the sheet was white: sheet_ref_colors (SHEET_REF_COLORS), sheet_control_bg/border/text, sheet_track, sheet_macro_input/footprint/conflict/target, sheet_py_tag/on_sheet_py_tag, sheet_trace_arrow/error. Give each a dark-sheet value, and make icons::paint_on_sheet (used by cell_pictures.rs, chartview.rs, grid/quadrant.rs, grid/show.rs, grid/tables.rs) use the palette of the current sheet appearance instead of Tokens::light(). Also replace the hard-coded colours in grid/show.rs:895/900 (Tokens::light() trace arrows), grid/selection.rs:136-156 (white fill handle, grey strokes) and grid/interact.rs:982 (grey bar).",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS2"
+      ]
+    },
+    {
       "id": "gridcraft-DS4",
       "section": "main",
       "status": "todo",
@@ -55,7 +69,22 @@
       "model": "opus",
       "effort": "high",
       "short": "Automatic cell text and fill colours resolve per theme in cell_paint",
-      "details": "crates/ui-egui/src/grid/cell_paint.rs (contrast helper ~line 299), grid/editor.rs (~lines 53-54: in-cell editor uses WHITE for unset fill; use grid_bg and the automatic text token). Cells with no font colour render light on dark; explicit fills stay as authored and text chosen by the contrast guard; authored dark text on dark background fixed per DS1 rule. Number-format colours ([Red], [Blue]) and negative-red need dark-legible variants. Conditional-format, table-style and cell-style palettes get dark-legible rendering.",
+      "details": "crates/ui-egui/src/grid/cell_paint.rs (contrast helper ~line 299), grid/editor.rs (~lines 53-54: in-cell editor uses WHITE for unset fill; use grid_bg and the automatic text token). Cells with no font colour render light on dark; explicit fills stay as authored and text chosen by the contrast guard; authored dark text on dark background fixed per DS1 rule. Number-format colours ([Red], [Blue]) and negative-red need dark-legible variants. Conditional-format, table-style and cell-style palettes get dark-legible rendering. Include the dk1/lt1 theme-colour mapping and hyperlink colour from DS1. Cache resolved display colours per style so the remap costs nothing per frame on large sheets.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS1",
+        "gridcraft-DS2"
+      ]
+    },
+    {
+      "id": "gridcraft-DS11",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Borders on a dark sheet: automatic and dark authored borders stay visible",
+      "details": "Automatic border colour (black) is invisible on a dark sheet: render it light. Authored dark borders follow the DS1 contrast rule. Covers diagonal borders, the Draw Border pen preview, marching ants for copy, and border_preview.rs.",
       "done": null,
       "depends_on": [
         "gridcraft-DS1",
@@ -70,10 +99,24 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Dark rendering for overlays: charts, pictures, shapes, comments, tables, sparklines",
-      "details": "crates/ui-egui/src/chartview.rs and crates/chart: chart area/plot area/axis/gridline/text automatic colours follow the theme (authored colours untouched). Also comment indicators, data-validation arrows, filter buttons, paste-options buttons, table banding automatic colours, find highlight, error-check triangles, spill outline.",
+      "details": "crates/ui-egui/src/chartview.rs and crates/chart: chart area/plot area/axis/gridline/text automatic colours follow the theme (authored colours untouched). Also comment indicators, data-validation arrows, filter buttons, paste-options buttons, table banding automatic colours, find highlight, error-check triangles, spill outline. Also: text boxes and shapes (text_box.rs:157 draws black text), equations (equation.rs ink), Draw-tab ink and the default pen (grid/interact.rs:259), cell and floating picture placeholders, note popups and the note indicator, slicers, form controls, data bars and icon sets.",
       "done": null,
       "depends_on": [
         "gridcraft-DS2"
+      ]
+    },
+    {
+      "id": "gridcraft-DS12",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Page Break Preview on a dark sheet: watermark, break lines, area outside print",
+      "details": "Page Break Preview draws a grey 'Page N' watermark, blue page-break lines and greys the area outside the print area; all assume white. Give them dark-sheet colours with readable contrast.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS3"
       ]
     },
     {
@@ -84,7 +127,21 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Print, Page Layout view, export and PDF stay paper-white",
-      "details": "Print preview, Page Layout paper (Tokens.paper exists), PDF/PNG export and copy-as-picture must not use dark sheet colours (automatic text = black on white). Add regression tests that export/print output is identical in light and dark.",
+      "details": "Print preview, Page Layout paper (Tokens.paper exists), PDF/PNG export and copy-as-picture must not use dark sheet colours (automatic text = black on white). Add regression tests that export/print output is identical in light and dark. Also HTML/RTF clipboard copy and Save as HTML: they write authored colours, never the dark display colours.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS4"
+      ]
+    },
+    {
+      "id": "gridcraft-DS14",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Dialog previews and galleries match the sheet appearance",
+      "details": "Format Cells sample, border preview (border_preview.rs), cell styles, table styles and conditional formatting galleries (ribbon/galleries.rs), and the font colour picker's Automatic swatch show what the cell will look like on the current sheet, light or dark.",
       "done": null,
       "depends_on": [
         "gridcraft-DS4"
@@ -98,10 +155,25 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Theme switch repaints sheet instantly; persists; command and control parity",
-      "details": "view.theme (system/light/dark) must repaint the sheet area at once; System follows the OS live (crates/ui-egui/tests/it/system_theme.rs). Confirm persistence (app/prefs.rs); add a ui.screenshot control-channel test. Optional follow-up: a 'switch background' toggle to view the sheet light while the UI is dark, as a separate command.",
+      "details": "view.theme (system/light/dark) must repaint the sheet area at once; System follows the OS live (crates/ui-egui/tests/it/system_theme.rs). Confirm persistence (app/prefs.rs); add a ui.screenshot control-channel test.",
       "done": null,
       "depends_on": [
         "gridcraft-DS3"
+      ]
+    },
+    {
+      "id": "gridcraft-DS15",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Switch Background toggle: view.switchBackground on the View tab and in Options",
+      "details": "A user toggle for a light sheet while the UI is dark (and the other way round), as in Excel's dark mode. Command view.switchBackground (params {on}; empty params toggles; no dialog), View tab button next to Display theme, File > Options > General entry, saved in app/prefs.rs, reachable over the control channel. New labels translated in all 11 i18n languages. Tests for the command and the persisted preference.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS3",
+        "gridcraft-DS4"
       ]
     },
     {
@@ -112,14 +184,19 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Visual QA of dark sheet: snapshots, contrast audit, regression tests",
-      "details": "Offscreen snapshots (cargo run -p gridcraft-ui-egui --example snapshot) in light/dark of: sales sample, borders, fills, conditional formats, charts, frozen panes, range selection, cell editing, tables, comments. Compare with plan/excel/observed-ui.md and the user screenshot (ABC/1, DEF/2, GHI/3, Total). Add colour-mapping unit tests; run cargo xtask ci.",
+      "details": "Offscreen snapshots (cargo run -p gridcraft-ui-egui --example snapshot) in light/dark of: sales sample, borders, fills, conditional formats, charts, frozen panes, range selection, cell editing, tables, comments. Compare with plan/excel/observed-ui.md and the user screenshot (ABC/1, DEF/2, GHI/3, Total). Add colour-mapping unit tests; run cargo xtask ci. Update the tests that assume a white sheet: crates/ui-egui/tests/it/system_theme.rs, error_checking_menu.rs, chart_source_layering.rs, grid/tests.rs, and the trace-arrow tests in grid/show.rs (~1030, 1109) that use Tokens::light().",
       "done": null,
       "depends_on": [
         "gridcraft-DS3",
         "gridcraft-DS4",
         "gridcraft-DS5",
         "gridcraft-DS6",
-        "gridcraft-DS7"
+        "gridcraft-DS7",
+        "gridcraft-DS10",
+        "gridcraft-DS11",
+        "gridcraft-DS12",
+        "gridcraft-DS14",
+        "gridcraft-DS15"
       ]
     },
     {
@@ -130,11 +207,20 @@
       "model": "haiku",
       "effort": "low",
       "short": "Docs: ui-parity.md, ROADMAP.md, observed-ui.md for dark sheet area",
-      "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected).",
+      "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected). Also docs/architecture.md (the 'sheet stays white' paragraph) and the doc comments in theme.rs and icons.rs.",
       "done": null,
       "depends_on": [
         "gridcraft-DS8"
       ]
+    },
+    {
+      "id": "gridcraft-H1",
+      "section": "human",
+      "status": "todo",
+      "group": "Repository access",
+      "short": "Grant push access to storytold/gridcraft for MihailCosmin, or say where to push",
+      "details": "git push to https://github.com/storytold/gridcraft.git fails with 403 'Permission to storytold/gridcraft.git denied to MihailCosmin'. Local main is ahead of origin by the tasklist commits. Options: (1, recommended) add MihailCosmin as a collaborator with write access on storytold/gridcraft (GitHub > repo Settings > Collaborators), then a session runs git push; (2) log in as an account that has access: run '! gh auth login' and 'gh auth setup-git'; (3) push to a fork instead: tell which remote to use.",
+      "done": null
     }
   ]
 }
