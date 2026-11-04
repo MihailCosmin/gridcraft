@@ -166,16 +166,16 @@
     {
       "id": "gridcraft-DS14",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "medium",
       "short": "Dialog previews and galleries match the sheet appearance",
-      "details": "Format Cells sample, border preview (border_preview.rs), cell styles, table styles and conditional formatting galleries (ribbon/galleries.rs), and the font colour picker's Automatic swatch show what the cell will look like on the current sheet, light or dark.",
+      "details": "Format Cells sample, border preview (border_preview.rs), cell styles, table styles and conditional formatting galleries (ribbon/galleries.rs), and the font colour picker's Automatic swatch show what the cell will look like on the current sheet, light or dark. Done 04.11.2026: border preview (border_preview.rs) uses sheet gridline/ink and maps explicit colours by the dark-sheet rule; table style and cell style galleries (ribbon/galleries.rs) map fills, text and lines the same way; Format Cells Number sample sits on the sheet surface; the font colour Automatic swatch shows the sheet ink. The conditional formatting menus are text-only, so nothing to change. Verified: clippy -D warnings, ui-egui lib tests (298 pass); no snapshot test added for the previews.",
       "depends_on": [
         "gridcraft-DS4"
       ],
-      "done": null
+      "done": "2026-11-04T21:56:30"
     },
     {
       "id": "gridcraft-DS7",

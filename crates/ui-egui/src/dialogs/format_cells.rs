@@ -39,7 +39,12 @@ pub(super) fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog
                 }
                 cols[1].label(egui::RichText::new(lang.tr("Sample")).strong());
                 let preview = app.session.active().map(|doc| gridcraft_engine::display::format(&sample, &code, &doc.wb).text).unwrap_or_default();
-                cols[1].label(egui::RichText::new(preview).font(theme::ui_font(15.0)));
+                // The sample sits on the sheet surface, as the cell will look on this sheet.
+                let st_t = theme::Tokens::get(cols[1].ctx());
+                egui::Frame::new().fill(st_t.grid_bg).stroke(egui::Stroke::new(1.0, st_t.input_border)).inner_margin(6.0).show(&mut cols[1], |ui| {
+                    ui.set_min_width(ui.available_width());
+                    ui.label(egui::RichText::new(preview).font(theme::ui_font(15.0)).color(st_t.cell_text));
+                });
                 cols[1].add_space(8.0);
                 let label = cols[1].label(lang.tr("Type (custom format code):"));
                 cols[1].text_edit_singleline(&mut code).labelled_by(label.id);
@@ -137,6 +142,15 @@ pub(super) fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog
             });
             ui.label(lang.tr("Color:"));
             let colors = app.session.active().map(|doc| doc.wb.theme.colors).unwrap_or_default();
+            // Automatic is the sheet's ink: a swatch shows it on the current sheet, light or dark.
+            let sheet = theme::Tokens::get(ui.ctx());
+            ui.horizontal(|ui| {
+                let (r, _) = ui.allocate_exact_size(egui::vec2(22.0, 16.0), egui::Sense::hover());
+                ui.painter().rect_filled(r, 2.0, sheet.grid_bg);
+                ui.painter().rect_stroke(r, 2.0, egui::Stroke::new(1.0, sheet.input_border), egui::StrokeKind::Inside);
+                ui.painter().text(r.center(), egui::Align2::CENTER_CENTER, "A", theme::ui_font(11.0), sheet.cell_text);
+                ui.label(lang.tr("Automatic"));
+            });
             if let Some(c) = crate::widgets::color_palette(ui, &colors, lang.tr("Automatic")) {
                 st.font.color =
                     if c == "none" { gridcraft_engine::model::Color::Auto } else { gridcraft_engine::model::Color::from_hex(&c).unwrap_or_default() };

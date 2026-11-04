@@ -1,6 +1,6 @@
 //! Original border diagrams, painted with the same strokes as worksheet cells.
 
-use egui::{Align2, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
+use egui::{Align2, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use gridcraft_engine::model::{BorderStyle, Borders, Theme};
 
 use crate::grid::paint_border;
@@ -49,8 +49,9 @@ pub(crate) fn preset_button(ui: &mut Ui, label: &str, preset: &str) -> Response 
     response
 }
 
-/// Preview only reads the dialog draft. A white worksheet surface keeps automatic
-/// and explicit border colors faithful in both light and dark application themes.
+/// Preview only reads the dialog draft. It sits on the sheet surface as the cell will: white on the
+/// light sheet, dark on the dark sheet (automatic lines flip with it, explicit colours are mapped by
+/// the dark-sheet colour rule), whatever the Display theme.
 pub(crate) fn sample(ui: &mut Ui, borders: &Borders, theme: &Theme) {
     ui.add_space(8.0);
     ui.label("Preview");
@@ -70,12 +71,17 @@ pub(crate) fn sample(ui: &mut Ui, borders: &Borders, theme: &Theme) {
     ];
     for (line, points) in edges.iter().take(4) {
         if line.is_none() {
-            ui.painter().extend(egui::Shape::dotted_line(points, Color32::from_gray(190), 4.0, 0.5));
+            ui.painter().extend(egui::Shape::dotted_line(points, t.gridline, 4.0, 0.5));
         }
     }
     for (line, points) in edges {
         if !line.is_none() {
-            let color = line.color.resolve(theme).map(theme::color32).unwrap_or(Color32::BLACK);
+            // Automatic is the sheet's ink; an explicit colour is mapped and held legible on the dark sheet.
+            let color = match line.color.resolve(theme).map(theme::color32) {
+                Some(c) if t.dark_sheet => theme::ink_guarded(c, t.grid_bg, theme::INK_LINE_MIN),
+                Some(c) => c,
+                None => t.cell_text,
+            };
             paint_border(ui.painter(), points, line.style, color);
         }
     }

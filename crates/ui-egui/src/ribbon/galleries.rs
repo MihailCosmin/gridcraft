@@ -1,5 +1,5 @@
 use super::controls::act;
-use super::{Align2, Cat, Rect, Sense, SheetApp, Stroke, StrokeKind, Tokens, Ui, json, pos2, theme, vec2};
+use super::{Align2, Cat, Color32, Rect, Sense, SheetApp, Stroke, StrokeKind, Tokens, Ui, json, pos2, theme, vec2};
 
 /// A gallery of table styles drawn as mini tables.
 pub(super) fn table_gallery(app: &mut SheetApp, ui: &mut Ui, cmd: &str) {
@@ -29,9 +29,12 @@ pub(super) fn table_gallery(app: &mut SheetApp, ui: &mut Ui, cmd: &str) {
 
 pub(super) fn paint_table_swatch(ui: &Ui, r: Rect, wb: &gridcraft_engine::model::Workbook, style: &str) {
     let lk = gridcraft_engine::tables::look(style);
-    let res = |c: Option<gridcraft_engine::model::Color>| c.and_then(|c| c.resolve(&wb.theme)).map(theme::color32);
-    let p = ui.painter();
     let t = Tokens::get(ui.ctx());
+    // Fills are mapped by the dark-sheet colour rule; text is held legible on the sheet.
+    let res = |c: Option<gridcraft_engine::model::Color>| {
+        c.and_then(|c| c.resolve(&wb.theme)).map(theme::color32).map(|c| if t.dark_sheet { theme::ink(c) } else { c })
+    };
+    let p = ui.painter();
     p.rect_filled(r, 0.0, t.grid_bg);
     let rows = 5;
     let rh = r.height() / rows as f32;
@@ -52,7 +55,12 @@ pub(super) fn paint_table_swatch(ui: &Ui, r: Rect, wb: &gridcraft_engine::model:
         }
         for k in 0..3 {
             let x = rr.left() + 4.0 + k as f32 * (r.width() - 8.0) / 3.0;
-            let col = if i == 0 { res(Some(lk.header_font)).unwrap_or(t.cell_text) } else { t.sheet_control_border };
+            let col = if i == 0 {
+                let c = res(Some(lk.header_font)).unwrap_or(t.cell_text);
+                if t.dark_sheet { theme::ink_guarded(c, fill.unwrap_or(t.grid_bg), theme::INK_TEXT_MIN) } else { c }
+            } else {
+                t.sheet_control_border
+            };
             p.line_segment([pos2(x, rr.center().y), pos2(x + 10.0, rr.center().y)], Stroke::new(1.0, col));
         }
     }
@@ -110,17 +118,20 @@ pub(super) fn cell_style_gallery(app: &mut SheetApp, ui: &mut Ui) {
                     .resolve(&wb.theme)
                     .filter(|_| st.fill.pattern != gridcraft_engine::model::PatternType::None)
                     .map(theme::color32)
+                    .map(|c| if t.dark_sheet { theme::ink(c) } else { c })
                     .unwrap_or(t.grid_bg);
+                let ink = |c: Color32, min| if t.dark_sheet { theme::ink_guarded(c, fill, min) } else { c };
                 ui.painter().rect_filled(r, 0.0, fill);
                 ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, t.separator), StrokeKind::Inside);
                 if !st.borders.bottom.is_none() {
                     let c = st.borders.bottom.color.resolve(&wb.theme).map(theme::color32).unwrap_or(t.cell_text);
+                    let c = ink(c, theme::INK_LINE_MIN);
                     ui.painter().line_segment(
                         [r.left_bottom() + vec2(0.0, -1.5), r.right_bottom() + vec2(0.0, -1.5)],
                         Stroke::new(st.borders.bottom.style.width(), c),
                     );
                 }
-                let col = st.font.color.resolve(&wb.theme).map(theme::color32).unwrap_or(t.cell_text);
+                let col = ink(st.font.color.resolve(&wb.theme).map(theme::color32).unwrap_or(t.cell_text), theme::INK_TEXT_MIN);
                 let fam = theme::cell_family(&st.font.name, st.font.bold, st.font.italic);
                 ui.painter().text(
                     r.left_center() + vec2(4.0, 0.0),
