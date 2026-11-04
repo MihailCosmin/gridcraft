@@ -320,13 +320,13 @@
     {
       "id": "gridcraft-N3",
       "section": "rework",
-      "status": "todo",
+      "status": "done",
       "group": "Functions",
       "model": "sonnet",
       "effort": "medium",
       "short": "IMSQRT last digit differs on Windows: engineering::tests::complex_numbers fails",
-      "details": "Daily run 04.11.2026 (cargo test --workspace, Windows, rustc 1.99): crates/functions/src/engineering.rs:604 in engineering::tests::complex_numbers expects Text(\"0.707106781186548+0.707106781186547i\") but gets \"0.707106781186548+0.707106781186548i\" (the 15th significant digit of the imaginary part). Probably a platform libm difference in atan2/sin/cos (unverified). sqrt(2)/2 = 0.70710678118654752..., which rounds to ...548 at 15 significant digits for both parts, so the expected string may be the one to fix; check against Excel observation if possible. Make the result platform-independent (exact special cases or consistent 15-digit rounding) and keep the test strict. Rerun: cargo test -p gridcraft-functions --lib engineering.",
-      "done": null
+      "details": "Daily run 04.11.2026 (cargo test --workspace, Windows, rustc 1.99): crates/functions/src/engineering.rs:604 in engineering::tests::complex_numbers expects Text(\"0.707106781186548+0.707106781186547i\") but gets \"0.707106781186548+0.707106781186548i\" (the 15th significant digit of the imaginary part). Probably a platform libm difference in atan2/sin/cos (unverified). sqrt(2)/2 = 0.70710678118654752..., which rounds to ...548 at 15 significant digits for both parts, so the expected string may be the one to fix; check against Excel observation if possible. Make the result platform-independent (exact special cases or consistent 15-digit rounding) and keep the test strict. Rerun: cargo test -p gridcraft-functions --lib engineering. Done 04.11.2026: cause was the platform libm (Windows sin(pi/4) is 1 ulp above the correctly rounded value). imsqrt in crates/functions/src/engineering.rs now uses the pure-Rust libm crate (already in Cargo.lock; added to the functions crate) for sin/cos. cargo test -p gridcraft-functions --lib engineering passes (all 25 Excel-read strings strict), clippy -D warnings and cargo xtask layers OK. Not verified on Linux/macOS.",
+      "done": "2026-11-04T22:47:04"
     }
   ]
 }
