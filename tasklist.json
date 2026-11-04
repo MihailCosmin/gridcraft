@@ -36,17 +36,28 @@
     {
       "id": "gridcraft-DS15",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "medium",
       "short": "Opt-in dark sheet toggle: View > Switch Modes and File > Options, off by default",
-      "details": "The dark sheet is a user setting separate from Display theme and off by default (see DS1 for the upstream constraint and the WordCraft #194 precedent). Command view.darkMode (decided, as in WordCraft; View > Switch Modes; params {on}, empty params toggles, no dialog), View tab button next to Display theme, File > Options > General checkbox, saved in app/prefs.rs like options.highlightActiveRow (PR #3268): no change to the file, no dirty flag, no undo step. Reachable over the control channel. New labels at least in English; other languages may fall back. Tests: off by default, toggle, preference round trip, older settings read as off. Design 04.11.2026 (DS1, docs/dark-sheet.md): the id view.darkMode is already the legacy interface switch in GridCraft (app/commands.rs:180, title-bar Dark Mode button): waits for H3 (recommended: new id view.darkSheet). Params {on?} with WordCraft's value accepted as an alias, returns {on}; Options label \"Dark sheet (light text on dark cells)\", tooltip \"Show the cells with their colours inverted. Saving, printing and PDFs are unchanged.\"; snapshot example gets --dark-sheet. DS2 gave the hook: each frame call theme::set_dark_sheet(ctx, ui_state.dark_sheet) before painting (Tokens::get reads it); Print Preview (backstage/print.rs) must keep a white sheet: use Tokens::get(ctx).with_dark_sheet(false) there.",
+      "details": "The dark sheet is a user setting separate from Display theme and off by default (see DS1 for the upstream constraint and the WordCraft #194 precedent). Command view.darkMode (decided, as in WordCraft; View > Switch Modes; params {on}, empty params toggles, no dialog), View tab button next to Display theme, File > Options > General checkbox, saved in app/prefs.rs like options.highlightActiveRow (PR #3268): no change to the file, no dirty flag, no undo step. Reachable over the control channel. New labels at least in English; other languages may fall back. Tests: off by default, toggle, preference round trip, older settings read as off. Design 04.11.2026 (DS1, docs/dark-sheet.md): the id view.darkMode is already the legacy interface switch in GridCraft (app/commands.rs:180, title-bar Dark Mode button): waits for H3 (recommended: new id view.darkSheet). Params {on?} with WordCraft's value accepted as an alias, returns {on}; Options label \"Dark sheet (light text on dark cells)\", tooltip \"Show the cells with their colours inverted. Saving, printing and PDFs are unchanged.\"; snapshot example gets --dark-sheet. DS2 gave the hook: each frame call theme::set_dark_sheet(ctx, ui_state.dark_sheet) before painting (Tokens::get reads it); Print Preview (backstage/print.rs) must keep a white sheet: use Tokens::get(ctx).with_dark_sheet(false) there. Done 04.11.2026: H3 is unanswered, so the recommended id view.darkSheet is used (legacy view.darkMode untouched). UiState.dark_sheet (serde default off, saved with the other prefs); command view.darkSheet {on?|value?} toggles and returns {on}, listed in control.rs; View tab: 'Dark sheet' checkbox under Display theme; File > Options > General checkbox with the tooltip; SheetApp::sync_theme_preference calls theme::set_dark_sheet each frame; Print Preview uses Tokens::get(ctx).with_dark_sheet(false); docs/control-protocol.md updated. Tests tests/it/dark_sheet_setting.rs (5: off by default, set/toggle/alias, flag reaches tokens independent of Display theme, preference round trip and old settings off, no dirty flag); ui-egui lib 294 and it control/options/backstage tests pass, clippy -D warnings and fmt clean. Left: see gridcraft-DS15b.",
       "depends_on": [
         "gridcraft-DS1",
         "gridcraft-DS2",
         "gridcraft-H3"
       ],
+      "done": "2026-11-04T21:27:11"
+    },
+    {
+      "id": "gridcraft-DS15b",
+      "section": "rework",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Dark sheet toggle: Switch Modes group in View tab, snapshot --dark-sheet, translations",
+      "details": "Continues gridcraft-DS15. Left: (1) the View tab has no 'Switch Modes' group, the checkbox sits beside Display theme; build the group if the ribbon layout wants it; (2) the snapshot example needs a --dark-sheet flag (crates/ui-egui/examples/snapshot.rs); (3) translations of 'Dark sheet', 'Dark sheet (light text on dark cells)' and the tooltip (they fall back to English); (4) if H3 is answered with b or another id, rename view.darkSheet. Nothing paints dark yet: DS3/DS4.",
       "done": null
     },
     {
