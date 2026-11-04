@@ -28,10 +28,10 @@
       "effort": "high",
       "short": "Add sheet-area tokens to theme::Tokens (grid_bg, grid_line, cell_text_auto, ...)",
       "details": "crates/ui-egui/src/theme.rs: grid_bg is hard-coded Color32::WHITE (line ~212). Make grid_bg, grid line, automatic cell text, grid header text, selection tint and frozen-line colours dark/light picked tokens. Extend the contrast tests in theme.rs (cell text on grid_bg, grid line on grid_bg non-text ratio, selection). The contrast_tests list must hold every sheet foreground/background pair in both themes.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS1"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS15",
@@ -42,11 +42,11 @@
       "effort": "medium",
       "short": "Opt-in dark sheet toggle: View > Switch Modes and File > Options, off by default",
       "details": "The dark sheet is a user setting separate from Display theme and off by default (see DS1 for the upstream constraint and the WordCraft #194 precedent). Command id per DS1 (view.darkMode recommended for parity with WordCraft; params {on}, empty params toggles, no dialog), View tab button next to Display theme, File > Options > General checkbox, saved in app/prefs.rs like options.highlightActiveRow (PR #3268): no change to the file, no dirty flag, no undo step. Reachable over the control channel. New labels at least in English; other languages may fall back. Tests: off by default, toggle, preference round trip, older settings read as off.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS1",
         "gridcraft-DS2"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS3",
@@ -57,11 +57,11 @@
       "effort": "high",
       "short": "Render grid backgrounds, lines and headers from tokens in dark mode",
       "details": "crates/ui-egui/src/grid/quadrant.rs (Color32::WHITE at ~208), show.rs, geo.rs, cursor.rs (white/black halo: choose per mode), selection.rs, active_row.rs: replace hard-coded colours with Tokens. Gridlines toggle must still work. Check offscreen snapshot with --sample sales in dark mode. Dark values apply only while the DS15 setting is on; with it off the sheet stays as today.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS2",
         "gridcraft-DS15"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS10",
@@ -72,11 +72,11 @@
       "effort": "high",
       "short": "Give the fixed sheet_* tokens and paint_on_sheet dark values",
       "details": "theme.rs keeps these the same in both themes because the sheet was white: sheet_ref_colors (SHEET_REF_COLORS), sheet_control_bg/border/text, sheet_track, sheet_macro_input/footprint/conflict/target, sheet_py_tag/on_sheet_py_tag, sheet_trace_arrow/error. Give each a dark-sheet value, and make icons::paint_on_sheet (used by cell_pictures.rs, chartview.rs, grid/quadrant.rs, grid/show.rs, grid/tables.rs) use the palette of the current sheet appearance instead of Tokens::light(). Also replace the hard-coded colours in grid/show.rs:895/900 (Tokens::light() trace arrows), grid/selection.rs:136-156 (white fill handle, grey strokes) and grid/interact.rs:982 (grey bar). Dark values apply only while the DS15 setting is on; with it off the sheet stays as today.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS2",
         "gridcraft-DS15"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS4",
@@ -87,12 +87,12 @@
       "effort": "high",
       "short": "Automatic cell text and fill colours resolve per theme in cell_paint",
       "details": "crates/ui-egui/src/grid/cell_paint.rs (contrast helper ~line 299), grid/editor.rs (~lines 53-54: in-cell editor uses WHITE for unset fill; use grid_bg and the automatic text token). Cells with no font colour render light on dark; explicit fills stay as authored and text chosen by the contrast guard; authored dark text on dark background fixed per DS1 rule. Number-format colours ([Red], [Blue]) and negative-red need dark-legible variants. Conditional-format, table-style and cell-style palettes get dark-legible rendering. Include the dk1/lt1 theme-colour mapping and hyperlink colour from DS1. Cache resolved display colours per style so the remap costs nothing per frame on large sheets. Dark values apply only while the DS15 setting is on; with it off the sheet stays as today.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS1",
         "gridcraft-DS2",
         "gridcraft-DS15"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS11",
@@ -103,11 +103,11 @@
       "effort": "medium",
       "short": "Borders on a dark sheet: automatic and dark authored borders stay visible",
       "details": "Automatic border colour (black) is invisible on a dark sheet: render it light. Authored dark borders follow the DS1 contrast rule. Covers diagonal borders, the Draw Border pen preview, marching ants for copy, and border_preview.rs.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS1",
         "gridcraft-DS2"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS5",
@@ -118,10 +118,10 @@
       "effort": "medium",
       "short": "Dark rendering for overlays: charts, pictures, shapes, comments, tables, sparklines",
       "details": "crates/ui-egui/src/chartview.rs and crates/chart: chart area/plot area/axis/gridline/text automatic colours follow the theme (authored colours untouched). Also comment indicators, data-validation arrows, filter buttons, paste-options buttons, table banding automatic colours, find highlight, error-check triangles, spill outline. Also: text boxes and shapes (text_box.rs:157 draws black text), equations (equation.rs ink), Draw-tab ink and the default pen (grid/interact.rs:259), cell and floating picture placeholders, note popups and the note indicator, slicers, form controls, data bars and icon sets.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS2"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS12",
@@ -132,10 +132,10 @@
       "effort": "medium",
       "short": "Page Break Preview on a dark sheet: watermark, break lines, area outside print",
       "details": "Page Break Preview draws a grey 'Page N' watermark, blue page-break lines and greys the area outside the print area; all assume white. Give them dark-sheet colours with readable contrast.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS3"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS6",
@@ -146,10 +146,10 @@
       "effort": "medium",
       "short": "Print, Page Layout view, export and PDF stay paper-white",
       "details": "Print preview, Page Layout paper (Tokens.paper exists), PDF/PNG export and copy-as-picture must not use dark sheet colours (automatic text = black on white). Add regression tests that export/print output is identical in light and dark. Also HTML/RTF clipboard copy and Save as HTML: they write authored colours, never the dark display colours.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS4"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS14",
@@ -160,10 +160,10 @@
       "effort": "medium",
       "short": "Dialog previews and galleries match the sheet appearance",
       "details": "Format Cells sample, border preview (border_preview.rs), cell styles, table styles and conditional formatting galleries (ribbon/galleries.rs), and the font colour picker's Automatic swatch show what the cell will look like on the current sheet, light or dark.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS4"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS7",
@@ -174,10 +174,10 @@
       "effort": "medium",
       "short": "Theme switch repaints sheet instantly; persists; command and control parity",
       "details": "view.theme (system/light/dark) must repaint the sheet area at once; System follows the OS live (crates/ui-egui/tests/it/system_theme.rs). Confirm persistence (app/prefs.rs); add a ui.screenshot control-channel test.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS3"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS8",
@@ -188,7 +188,6 @@
       "effort": "medium",
       "short": "Visual QA of dark sheet: snapshots, contrast audit, regression tests",
       "details": "Offscreen snapshots (cargo run -p gridcraft-ui-egui --example snapshot) in light/dark of: sales sample, borders, fills, conditional formats, charts, frozen panes, range selection, cell editing, tables, comments. Compare with plan/excel/observed-ui.md and the user screenshot (ABC/1, DEF/2, GHI/3, Total). Add colour-mapping unit tests; run cargo xtask ci. Update the tests that assume a white sheet: crates/ui-egui/tests/it/system_theme.rs, error_checking_menu.rs, chart_source_layering.rs, grid/tests.rs, and the trace-arrow tests in grid/show.rs (~1030, 1109) that use Tokens::light().",
-      "done": null,
       "depends_on": [
         "gridcraft-DS3",
         "gridcraft-DS4",
@@ -200,7 +199,8 @@
         "gridcraft-DS12",
         "gridcraft-DS14",
         "gridcraft-DS15"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS9",
@@ -211,10 +211,10 @@
       "effort": "low",
       "short": "Docs: ui-parity.md, ROADMAP.md, observed-ui.md for dark sheet area",
       "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected). Also docs/architecture.md (the 'sheet stays white' paragraph) and the doc comments in theme.rs and icons.rs.",
-      "done": null,
       "depends_on": [
         "gridcraft-DS8"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-DS16",
@@ -224,32 +224,34 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Open the #1264 PRs from the fork, split and formatted as upstream accepts",
-      "details": "Upstream has no CONTRIBUTING or PR template; the rules are AGENTS.md plus what merged PRs show. Checklist: 1. Split: maintainers asked PR #177 to split; send small reviewable PRs, e.g. PR A = DS15 toggle + DS2/DS3/DS4/DS10/DS11 (canvas, grid, automatic ink, borders, sheet tokens), PR B = DS5 overlays and charts, PR C = DS12/DS14/DS6 page break preview, previews, print/export guarantees. Each PR branches from current upstream main, no conflicts. 2. Title: plain sentence naming the area and the behaviour, with the issue: 'Dark sheet: View > Switch Modes shows the cells dark, off by default (#1264)'; no conventional-commit prefix, no internal task ids (DS*) in titles, commits or code. Body says 'Closes #1264' only on the last PR, 'Part of #1264' on the others. 3. Body (as merged PR #3268 and WordCraft #194): what the user gets and where to find it; design choices and why (opt-in, separate from Display theme, screen-only, explicit fills unchanged); relation to #1736 and #177; Testing section listing the new tests by file and what each proves, what was checked by eye, and what is NOT covered; a table of cargo xtask ci steps with results (fmt, clippy, tests, assets, layers, wasm), naming any failures that also fail on clean main; translations included. 4. Gates: cargo xtask ci (fmt, clippy -D warnings, tests, assets, layers, wasm) passes or each failure is shown to fail on main too; no unwrap/expect/panic/indexing on input-derived values; colours only via theme::Tokens; everything a command, reachable via control channel; programmatic call opens no dialog; no CI workflow edits; no Microsoft screenshots or assets; any new asset has an ATTRIBUTION.md row. 5. Docs in the same PR: docs/ui-parity.md row, ROADMAP.md progress log, docs/architecture.md 'sheet stays white' paragraph, timestamps and revision history; docs/control-protocol.md if a method is added. 6. Attach before/after snapshot PNGs made with GridCraft (snapshot example --dark) to the PR description, not to the repo. 7. Never include tasklist.json, claude_answers.md, plan/ or local config in the PR diff. Allow maintainer edits. Answer CodeRabbit review comments (it reviews every PR) and push fixes as new commits, no force-push. 8. Mention the sibling precedent storytold/wordcraft#194 and invite the maintainers to pick the command id if they prefer another.",
-      "done": null,
+      "details": "Upstream has no CONTRIBUTING or PR template; the rules are AGENTS.md plus what merged PRs show. Checklist: 1. Split: maintainers asked PR #177 to split; send small reviewable PRs, e.g. PR A = DS15 toggle + DS2/DS3/DS4/DS10/DS11 (canvas, grid, automatic ink, borders, sheet tokens), PR B = DS5 overlays and charts, PR C = DS12/DS14/DS6 page break preview, previews, print/export guarantees. Each PR branches from current upstream main, no conflicts. 2. Title: plain sentence naming the area and the behaviour, with the issue: 'Dark sheet: View > Switch Modes shows the cells dark, off by default (#1264)'; no conventional-commit prefix, no internal task ids (DS*) in titles, commits or code. Body says 'Closes #1264' only on the last PR, 'Part of #1264' on the others. 3. Body (as merged PR #3268 and WordCraft #194): what the user gets and where to find it; design choices and why (opt-in, separate from Display theme, screen-only, explicit fills unchanged); relation to #1736 and #177; Testing section listing the new tests by file and what each proves, what was checked by eye, and what is NOT covered; a table of cargo xtask ci steps with results (fmt, clippy, tests, assets, layers, wasm), naming any failures that also fail on clean main; translations included. 4. Gates: cargo xtask ci (fmt, clippy -D warnings, tests, assets, layers, wasm) passes or each failure is shown to fail on main too; no unwrap/expect/panic/indexing on input-derived values; colours only via theme::Tokens; everything a command, reachable via control channel; programmatic call opens no dialog; no CI workflow edits; no Microsoft screenshots or assets; any new asset has an ATTRIBUTION.md row. 5. Docs in the same PR: docs/ui-parity.md row, ROADMAP.md progress log, docs/architecture.md 'sheet stays white' paragraph, timestamps and revision history; docs/control-protocol.md if a method is added. 6. Attach before/after snapshot PNGs made with GridCraft (snapshot example --dark) to the PR description, not to the repo. 7. Never include tasklist.json, claude_answers.md, plan/ or local config in the PR diff. Allow maintainer edits. Answer CodeRabbit review comments (it reviews every PR) and push fixes as new commits, no force-push. 8. Mention the sibling precedent storytold/wordcraft#194 and invite the maintainers to pick the command id if they prefer another. Credits (H2 answer a): add no contributors/people.toml entry in any #1264 PR; do not ask again.",
       "depends_on": [
         "gridcraft-DS8",
         "gridcraft-DS9",
         "gridcraft-H1",
         "gridcraft-H2"
-      ]
+      ],
+      "done": null
     },
     {
       "id": "gridcraft-H1",
       "section": "human",
-      "status": "todo",
+      "status": "done",
       "group": "Repository access",
       "short": "Fork storytold/gridcraft to MihailCosmin and decide the PR branch workflow",
       "details": "git push to storytold/gridcraft fails with 403; outside contributors (hectorviov, adifiedio, Morzilla) send PRs from forks, so push access is not the route. Do: (1) fork on GitHub (gh repo fork storytold/gridcraft --remote --remote-name fork), (2) decide whether PR branches are allowed here: the global CLAUDE.md says no branches or PRs, but an upstream PR needs a branch on the fork with only GridCraft changes. Recommended: allow branches named dark-sheet-* on the fork for this issue. (3) The two local commits on main that add tasklist.json must never reach upstream (tasklist.json and claude_answers.md are not part of the upstream repo): recommended to add both to .git/info/exclude and keep tasklist.json local, or keep it only on the fork's main.",
-      "done": null
+      "answer": "yes, do all of these, all is approved",
+      "done": "2026-11-04T20:57:21"
     },
     {
       "id": "gridcraft-H2",
       "section": "human",
-      "status": "todo",
+      "status": "done",
       "group": "Repository access",
       "short": "Choose how you want to be credited in About > Contributors (people.toml)",
-      "details": "AGENTS.md: before the first PR, the agent asks once whether the contributor wants credit beyond the GitHub username. Options: (a, default) nothing, credited as @MihailCosmin; (b) a real or display name; (c) sync_github_name = true to use the GitHub profile name. Answer in the task; the agent then adds only your entry in contributors/people.toml (template at the top of that file) in the first PR.",
-      "done": null
+      "details": "AGENTS.md: before the first PR, the agent asks once whether the contributor wants credit beyond the GitHub username. Options: (a, default) nothing, credited as @MihailCosmin; (b) a real or display name; (c) sync_github_name = true to use the GitHub profile name. Answer in the task; the agent then adds only your entry in contributors/people.toml (template at the top of that file) in the first PR. Done 04.11.2026: answer (a) nothing reviewed against AGENTS.md (Contributor credits): with no extra credit wanted, change nothing; contributors/people.toml has no MihailCosmin entry and none is added, the About window credits @MihailCosmin from contributors.json automatically. DS16 notes this.",
+      "answer": "a) Nothing",
+      "done": "2026-11-04T20:57:56"
     }
   ]
 }
