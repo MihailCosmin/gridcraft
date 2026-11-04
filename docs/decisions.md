@@ -124,3 +124,14 @@ so there the caps and the fuzzed input space are the protection. `crates/math/te
 gate on every test run, so a version bump has to pass it. RaTeX positions glyphs with KaTeX
 font metrics; GridCraft never bundles the KaTeX fonts, so glyphs are drawn with system fonts
 and a glyph no font has is drawn as a `[?]` box.
+
+## The dark sheet is an opt-in view setting with WordCraft's colour rule (#1264)
+
+The dark sheet (light text on dark cells) is a user preference, off by default and separate
+from Display theme, turned on from View › Switch Modes or File › Options, as WordCraft's dark
+page (storytold/wordcraft#194). Changing the default look for everyone stays the maintainers'
+decision, so neither Display theme Dark nor System darkens the cells. On screen only, every
+workbook colour has its HSL lightness inverted with hue and saturation kept, lifted so white
+becomes `#333333`; a contrast guard lifts mapped text that would fall below 4.5:1 (or below
+the authored contrast, if lower). Pictures, files, printing and export are unchanged. Details:
+`docs/dark-sheet.md`.

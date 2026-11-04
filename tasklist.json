@@ -11,13 +11,13 @@
     {
       "id": "gridcraft-DS1",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "opus",
       "effort": "high",
       "short": "Design: sheet-area dark palette and automatic-colour mapping rules",
-      "details": "Define how Display theme Dark affects the sheet area: dark grid background (~#1E1E1E/#262626), grid lines, row/column header strip, selection/active-cell outline, fill-handle, frozen-pane and page-break lines, scrollbars, sheet tabs. Key rule: the stored file never changes; only rendering maps colours. Automatic (unset) font colour renders light in dark; explicit colours (RGB or theme) render as authored; explicit dark text on dark background needs a contrast guard (WCAG 4.5 ratio, reuse theme.rs contrast checks). Decide whether authored fills are shown as authored (recommended) or inverted. Record in docs/ (design note) and observed-ui.md. Reference: user screenshot with Dark theme, sheet area dark, subtle grid lines, green row-header highlight. Revisit the recorded rule 'the sheet stays white' (theme.rs module doc, theme.rs:95/103/122/157, docs/architecture.md 'UI building blocks', icons::paint_on_sheet) and replace it with the new one. Also decide: cells that store theme colour Text 1/Background 1 (dk1/lt1) explicitly (very common in Excel files) render like Automatic; hyperlink blue on dark; whether Dark also darkens the sheet by default or only with Switch Background on (DS15). Upstream constraints (checked 04.11.2026): maintainers hold 'changing the default look for everyone (dark canvas that recolours workbook colours)' as their product decision (echelon on PR #177), so the dark sheet must be an opt-in setting, off by default, separate from Display theme. Follow the sibling precedent storytold/wordcraft PR #194 (view.darkMode, View > Switch Modes button plus File > Options checkbox, screen-only, colours HSL-lightness-inverted keeping hue, pictures untouched, remembered between runs). Read the earlier proposals first: issue #1736 (patch and design notes for view.darkCells against v0.7.0: black canvas, dark gridlines, automatic ink flips, explicit fills unchanged) and open PR #177 (dragosol, dark canvas, conflicting). DECIDED by the user 04.11.2026 (hard rule): implement it like WordCraft: command view.darkMode, View > Switch Modes button plus File > Options checkbox, separate from Display theme, off by default.",
-      "done": null
+      "details": "Define how Display theme Dark affects the sheet area: dark grid background (~#1E1E1E/#262626), grid lines, row/column header strip, selection/active-cell outline, fill-handle, frozen-pane and page-break lines, scrollbars, sheet tabs. Key rule: the stored file never changes; only rendering maps colours. Automatic (unset) font colour renders light in dark; explicit colours (RGB or theme) render as authored; explicit dark text on dark background needs a contrast guard (WCAG 4.5 ratio, reuse theme.rs contrast checks). Decide whether authored fills are shown as authored (recommended) or inverted. Record in docs/ (design note) and observed-ui.md. Reference: user screenshot with Dark theme, sheet area dark, subtle grid lines, green row-header highlight. Revisit the recorded rule 'the sheet stays white' (theme.rs module doc, theme.rs:95/103/122/157, docs/architecture.md 'UI building blocks', icons::paint_on_sheet) and replace it with the new one. Also decide: cells that store theme colour Text 1/Background 1 (dk1/lt1) explicitly (very common in Excel files) render like Automatic; hyperlink blue on dark; whether Dark also darkens the sheet by default or only with Switch Background on (DS15). Upstream constraints (checked 04.11.2026): maintainers hold 'changing the default look for everyone (dark canvas that recolours workbook colours)' as their product decision (echelon on PR #177), so the dark sheet must be an opt-in setting, off by default, separate from Display theme. Follow the sibling precedent storytold/wordcraft PR #194 (view.darkMode, View > Switch Modes button plus File > Options checkbox, screen-only, colours HSL-lightness-inverted keeping hue, pictures untouched, remembered between runs). Read the earlier proposals first: issue #1736 (patch and design notes for view.darkCells against v0.7.0: black canvas, dark gridlines, automatic ink flips, explicit fills unchanged) and open PR #177 (dragosol, dark canvas, conflicting). DECIDED by the user 04.11.2026 (hard rule): implement it like WordCraft: command view.darkMode, View > Switch Modes button plus File > Options checkbox, separate from Display theme, off by default. Done 04.11.2026: design note docs/dark-sheet.md (what the user gets, colour rule, element tables with dark values, views, command, token layout, tests, replacement wording for \"the sheet stays white\", earlier proposals) and a decision entry in docs/decisions.md. Decided: opt-in, off by default, separate from Display theme, screen only; every workbook colour (automatic and explicit font, dk1/lt1, hyperlinks, number-format colours, fills, borders, CF, tables, charts, shapes) uses WordCraft #194's rule ink(c) = lift(invert HSL lightness), sheet grey #333333, plus a contrast guard (text lifted to min(4.5, authored contrast)); pictures and sheet tab colours as authored; headers, scroll bars and tabs follow Display theme; Page Layout view goes dark, Print Preview stays white; GridCraft's own sheet overlays get fixed dark values, all checked against #333333 (selection #5CC587 5.9:1, refs 4.8-7.0:1, controls, trace, macro, PY tag, error-check). Found: the id view.darkMode is already the legacy interface switch in GridCraft, so the id is left to the user in H3 (recommended view.darkSheet); DS15 waits for it. plan/excel/observed-ui.md is not on this machine (plan/ is local-only and absent), so nothing was recorded there; Excel has no dark sheet to observe. The theme.rs/icons.rs/architecture.md wording changes when the code lands (DS9 has the text). Updated DS2, DS4, DS5, DS6, DS11, DS15 to match.",
+      "done": "2026-11-04T21:07:11"
     },
     {
       "id": "gridcraft-DS2",
@@ -27,7 +27,7 @@
       "model": "sonnet",
       "effort": "high",
       "short": "Add sheet-area tokens to theme::Tokens (grid_bg, grid_line, cell_text_auto, ...)",
-      "details": "crates/ui-egui/src/theme.rs: grid_bg is hard-coded Color32::WHITE (line ~212). Make grid_bg, grid line, automatic cell text, grid header text, selection tint and frozen-line colours dark/light picked tokens. Extend the contrast tests in theme.rs (cell text on grid_bg, grid line on grid_bg non-text ratio, selection). The contrast_tests list must hold every sheet foreground/background pair in both themes.",
+      "details": "crates/ui-egui/src/theme.rs: grid_bg is hard-coded Color32::WHITE (line ~212). Make grid_bg, grid line, automatic cell text, grid header text, selection tint and frozen-line colours dark/light picked tokens. Extend the contrast tests in theme.rs (cell text on grid_bg, grid line on grid_bg non-text ratio, selection). The contrast_tests list must hold every sheet foreground/background pair in both themes. Design 04.11.2026 (DS1, docs/dark-sheet.md): the sheet fields take their values from a SheetColors LIGHT/DARK set chosen by the dark-sheet flag, not by Display theme: Tokens::palette(dark_ui, dark_sheet); the flag is mirrored into the egui context each frame and read by Tokens::get. Dark values and their contrast ratios are in the note's tables. contrast_tests runs all four combinations; the gridline pair is held to at least the light sheet's 1.31:1.",
       "depends_on": [
         "gridcraft-DS1"
       ],
@@ -41,10 +41,11 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Opt-in dark sheet toggle: View > Switch Modes and File > Options, off by default",
-      "details": "The dark sheet is a user setting separate from Display theme and off by default (see DS1 for the upstream constraint and the WordCraft #194 precedent). Command view.darkMode (decided, as in WordCraft; View > Switch Modes; params {on}, empty params toggles, no dialog), View tab button next to Display theme, File > Options > General checkbox, saved in app/prefs.rs like options.highlightActiveRow (PR #3268): no change to the file, no dirty flag, no undo step. Reachable over the control channel. New labels at least in English; other languages may fall back. Tests: off by default, toggle, preference round trip, older settings read as off.",
+      "details": "The dark sheet is a user setting separate from Display theme and off by default (see DS1 for the upstream constraint and the WordCraft #194 precedent). Command view.darkMode (decided, as in WordCraft; View > Switch Modes; params {on}, empty params toggles, no dialog), View tab button next to Display theme, File > Options > General checkbox, saved in app/prefs.rs like options.highlightActiveRow (PR #3268): no change to the file, no dirty flag, no undo step. Reachable over the control channel. New labels at least in English; other languages may fall back. Tests: off by default, toggle, preference round trip, older settings read as off. Design 04.11.2026 (DS1, docs/dark-sheet.md): the id view.darkMode is already the legacy interface switch in GridCraft (app/commands.rs:180, title-bar Dark Mode button): waits for H3 (recommended: new id view.darkSheet). Params {on?} with WordCraft's value accepted as an alias, returns {on}; Options label \"Dark sheet (light text on dark cells)\", tooltip \"Show the cells with their colours inverted. Saving, printing and PDFs are unchanged.\"; snapshot example gets --dark-sheet.",
       "depends_on": [
         "gridcraft-DS1",
-        "gridcraft-DS2"
+        "gridcraft-DS2",
+        "gridcraft-H3"
       ],
       "done": null
     },
@@ -86,7 +87,7 @@
       "model": "opus",
       "effort": "high",
       "short": "Automatic cell text and fill colours resolve per theme in cell_paint",
-      "details": "crates/ui-egui/src/grid/cell_paint.rs (contrast helper ~line 299), grid/editor.rs (~lines 53-54: in-cell editor uses WHITE for unset fill; use grid_bg and the automatic text token). Cells with no font colour render light on dark; explicit fills stay as authored and text chosen by the contrast guard; authored dark text on dark background fixed per DS1 rule. Number-format colours ([Red], [Blue]) and negative-red need dark-legible variants. Conditional-format, table-style and cell-style palettes get dark-legible rendering. Include the dk1/lt1 theme-colour mapping and hyperlink colour from DS1. Cache resolved display colours per style so the remap costs nothing per frame on large sheets. Dark values apply only while the DS15 setting is on; with it off the sheet stays as today.",
+      "details": "crates/ui-egui/src/grid/cell_paint.rs (contrast helper ~line 299), grid/editor.rs (~lines 53-54: in-cell editor uses WHITE for unset fill; use grid_bg and the automatic text token). Cells with no font colour render light on dark; explicit fills stay as authored and text chosen by the contrast guard; authored dark text on dark background fixed per DS1 rule. Number-format colours ([Red], [Blue]) and negative-red need dark-legible variants. Conditional-format, table-style and cell-style palettes get dark-legible rendering. Include the dk1/lt1 theme-colour mapping and hyperlink colour from DS1. Cache resolved display colours per style so the remap costs nothing per frame on large sheets. Dark values apply only while the DS15 setting is on; with it off the sheet stays as today. Design 04.11.2026 (DS1, docs/dark-sheet.md): this supersedes \"explicit colours render as authored\": every workbook colour, automatic or explicit (dk1/lt1, hyperlink, [Red]/[Blue], fills, CF, table and cell styles), goes through ink(c) = lift(invert HSL lightness) with sheet grey #333333, then text gets the contrast guard against the mapped fill (target min(4.5, authored contrast), move HSL lightness away from the background). Reuse model style.rs rgb_to_hsl/hsl_to_rgb (make them pub). Pictures and icon-set glyphs untouched. Cache per (ink, background).",
       "depends_on": [
         "gridcraft-DS1",
         "gridcraft-DS2",
@@ -102,7 +103,7 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Borders on a dark sheet: automatic and dark authored borders stay visible",
-      "details": "Automatic border colour (black) is invisible on a dark sheet: render it light. Authored dark borders follow the DS1 contrast rule. Covers diagonal borders, the Draw Border pen preview, marching ants for copy, and border_preview.rs.",
+      "details": "Automatic border colour (black) is invisible on a dark sheet: render it light. Authored dark borders follow the DS1 contrast rule. Covers diagonal borders, the Draw Border pen preview, marching ants for copy, and border_preview.rs. Design 04.11.2026 (DS1, docs/dark-sheet.md): border colours (automatic = black) go through ink(), so automatic borders render white; the guard holds them to 3:1 against the cell's mapped fill.",
       "depends_on": [
         "gridcraft-DS1",
         "gridcraft-DS2"
@@ -117,7 +118,7 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Dark rendering for overlays: charts, pictures, shapes, comments, tables, sparklines",
-      "details": "crates/ui-egui/src/chartview.rs and crates/chart: chart area/plot area/axis/gridline/text automatic colours follow the theme (authored colours untouched). Also comment indicators, data-validation arrows, filter buttons, paste-options buttons, table banding automatic colours, find highlight, error-check triangles, spill outline. Also: text boxes and shapes (text_box.rs:157 draws black text), equations (equation.rs ink), Draw-tab ink and the default pen (grid/interact.rs:259), cell and floating picture placeholders, note popups and the note indicator, slicers, form controls, data bars and icon sets.",
+      "details": "crates/ui-egui/src/chartview.rs and crates/chart: chart area/plot area/axis/gridline/text automatic colours follow the theme (authored colours untouched). Also comment indicators, data-validation arrows, filter buttons, paste-options buttons, table banding automatic colours, find highlight, error-check triangles, spill outline. Also: text boxes and shapes (text_box.rs:157 draws black text), equations (equation.rs ink), Draw-tab ink and the default pen (grid/interact.rs:259), cell and floating picture placeholders, note popups and the note indicator, slicers, form controls, data bars and icon sets. Design 04.11.2026 (DS1, docs/dark-sheet.md): charts, shapes, text boxes, equations, comments, sparklines and Draw ink use the same ink() mapping as cells (this supersedes \"authored colours untouched\"); pictures and picture fills stay as authored.",
       "depends_on": [
         "gridcraft-DS2"
       ],
@@ -145,7 +146,7 @@
       "model": "sonnet",
       "effort": "medium",
       "short": "Print, Page Layout view, export and PDF stay paper-white",
-      "details": "Print preview, Page Layout paper (Tokens.paper exists), PDF/PNG export and copy-as-picture must not use dark sheet colours (automatic text = black on white). Add regression tests that export/print output is identical in light and dark. Also HTML/RTF clipboard copy and Save as HTML: they write authored colours, never the dark display colours.",
+      "details": "Print preview, Page Layout paper (Tokens.paper exists), PDF/PNG export and copy-as-picture must not use dark sheet colours (automatic text = black on white). Add regression tests that export/print output is identical in light and dark. Also HTML/RTF clipboard copy and Save as HTML: they write authored colours, never the dark display colours. Design 04.11.2026 (DS1, docs/dark-sheet.md): Page Layout view is an editing view and follows the dark sheet (paper dark, like WordCraft's page); Print Preview, print, PDF/PNG export, Copy as Picture, HTML/RTF clipboard and Save as Web Page always use authored colours. The regression tests compare output with the setting on and off.",
       "depends_on": [
         "gridcraft-DS4"
       ],
@@ -210,7 +211,7 @@
       "model": "haiku",
       "effort": "low",
       "short": "Docs: ui-parity.md, ROADMAP.md, observed-ui.md for dark sheet area",
-      "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected). Also docs/architecture.md (the 'sheet stays white' paragraph) and the doc comments in theme.rs and icons.rs.",
+      "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected). Also docs/architecture.md (the 'sheet stays white' paragraph) and the doc comments in theme.rs and icons.rs. Design 04.11.2026 (DS1): the replacement wording for \"the sheet stays white\" is in docs/dark-sheet.md (Wording to replace); also link docs/dark-sheet.md from docs/ui-parity.md.",
       "depends_on": [
         "gridcraft-DS8"
       ],
@@ -252,6 +253,15 @@
       "details": "AGENTS.md: before the first PR, the agent asks once whether the contributor wants credit beyond the GitHub username. Options: (a, default) nothing, credited as @MihailCosmin; (b) a real or display name; (c) sync_github_name = true to use the GitHub profile name. Answer in the task; the agent then adds only your entry in contributors/people.toml (template at the top of that file) in the first PR. Done 04.11.2026: answer (a) nothing reviewed against AGENTS.md (Contributor credits): with no extra credit wanted, change nothing; contributors/people.toml has no MihailCosmin entry and none is added, the About window credits @MihailCosmin from contributors.json automatically. DS16 notes this. Correction 04.11.2026: the user's answer means NO credit at all, not credit as @MihailCosmin (option (a) was worded wrongly). The repo has no opt-out: contributors.json is generated by the maintainers' contributors.py (not in this repo) from merged commits, so the username would be listed automatically. Handled in DS16: no people.toml entry, and each PR asks the maintainers to leave the account out of About > Contributors.",
       "answer": "a) Nothing",
       "done": "2026-11-04T20:57:56"
+    },
+    {
+      "id": "gridcraft-H3",
+      "section": "human",
+      "status": "todo",
+      "group": "Dark sheet",
+      "short": "Choose the dark-sheet command id: reuse view.darkMode or a new id (view.darkSheet)",
+      "details": "The decided id view.darkMode (as WordCraft) is already taken in GridCraft: it is the older light/dark INTERFACE switch (crates/ui-egui/src/app/commands.rs:180, the title-bar Dark Mode button in ribbon/title_bar.rs:154, tests/it/system_theme.rs:140-147, documented as legacy in docs/control-protocol.md:123). Options: (a, recommended) keep view.darkMode as the interface switch and give the dark sheet a new id, view.darkSheet, with WordCraft's places and labels (View > Switch Modes, File > Options checkbox); nothing breaks for control-channel, CLI or MCP clients, and the PR invites the maintainers to rename it. (b) Reuse view.darkMode for the dark sheet exactly as WordCraft; the title-bar button moves to view.theme, and every client that calls view.darkMode {on:true} to get a dark interface gets a dark sheet instead (a breaking change the PR must announce in CHANGELOG/control-protocol.md). (c) Another id you name. Answer in the task: a, b or the id. Design: docs/dark-sheet.md (Command).",
+      "done": null
     }
   ]
 }
