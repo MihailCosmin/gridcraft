@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "repo": "gridcraft",
+  "sections": {
+    "main": "Main Work",
+    "rework": "Rework",
+    "validation": "Validation",
+    "human": "Human"
+  },
+  "tasks": [
+    {
+      "id": "gridcraft-DS1",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "opus",
+      "effort": "high",
+      "short": "Design: sheet-area dark palette and automatic-colour mapping rules",
+      "details": "Define how Display theme Dark affects the sheet area: dark grid background (~#1E1E1E/#262626), grid lines, row/column header strip, selection/active-cell outline, fill-handle, frozen-pane and page-break lines, scrollbars, sheet tabs. Key rule: the stored file never changes; only rendering maps colours. Automatic (unset) font colour renders light in dark; explicit colours (RGB or theme) render as authored; explicit dark text on dark background needs a contrast guard (WCAG 4.5 ratio, reuse theme.rs contrast checks). Decide whether authored fills are shown as authored (recommended) or inverted. Record in docs/ (design note) and observed-ui.md. Reference: user screenshot with Dark theme, sheet area dark, subtle grid lines, green row-header highlight.",
+      "done": null
+    },
+    {
+      "id": "gridcraft-DS2",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "high",
+      "short": "Add sheet-area tokens to theme::Tokens (grid_bg, grid_line, cell_text_auto, ...)",
+      "details": "crates/ui-egui/src/theme.rs: grid_bg is hard-coded Color32::WHITE (line ~212). Make grid_bg, grid line, automatic cell text, grid header text, selection tint and frozen-line colours dark/light picked tokens. Extend the contrast tests in theme.rs (cell text on grid_bg, grid line on grid_bg non-text ratio, selection).",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS1"
+      ]
+    },
+    {
+      "id": "gridcraft-DS3",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "high",
+      "short": "Render grid backgrounds, lines and headers from tokens in dark mode",
+      "details": "crates/ui-egui/src/grid/quadrant.rs (Color32::WHITE at ~208), show.rs, geo.rs, cursor.rs (white/black halo: choose per mode), selection.rs, active_row.rs: replace hard-coded colours with Tokens. Gridlines toggle must still work. Check offscreen snapshot with --sample sales in dark mode.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS2"
+      ]
+    },
+    {
+      "id": "gridcraft-DS4",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "opus",
+      "effort": "high",
+      "short": "Automatic cell text and fill colours resolve per theme in cell_paint",
+      "details": "crates/ui-egui/src/grid/cell_paint.rs (contrast helper ~line 299), grid/editor.rs (~lines 53-54: in-cell editor uses WHITE for unset fill; use grid_bg and the automatic text token). Cells with no font colour render light on dark; explicit fills stay as authored and text chosen by the contrast guard; authored dark text on dark background fixed per DS1 rule. Number-format colours ([Red], [Blue]) and negative-red need dark-legible variants. Conditional-format, table-style and cell-style palettes get dark-legible rendering.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS1",
+        "gridcraft-DS2"
+      ]
+    },
+    {
+      "id": "gridcraft-DS5",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Dark rendering for overlays: charts, pictures, shapes, comments, tables, sparklines",
+      "details": "crates/ui-egui/src/chartview.rs and crates/chart: chart area/plot area/axis/gridline/text automatic colours follow the theme (authored colours untouched). Also comment indicators, data-validation arrows, filter buttons, paste-options buttons, table banding automatic colours, find highlight, error-check triangles, spill outline.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS2"
+      ]
+    },
+    {
+      "id": "gridcraft-DS6",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Print, Page Layout view, export and PDF stay paper-white",
+      "details": "Print preview, Page Layout paper (Tokens.paper exists), PDF/PNG export and copy-as-picture must not use dark sheet colours (automatic text = black on white). Add regression tests that export/print output is identical in light and dark.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS4"
+      ]
+    },
+    {
+      "id": "gridcraft-DS7",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Theme switch repaints sheet instantly; persists; command and control parity",
+      "details": "view.theme (system/light/dark) must repaint the sheet area at once; System follows the OS live (crates/ui-egui/tests/it/system_theme.rs). Confirm persistence (app/prefs.rs); add a ui.screenshot control-channel test. Optional follow-up: a 'switch background' toggle to view the sheet light while the UI is dark, as a separate command.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS3"
+      ]
+    },
+    {
+      "id": "gridcraft-DS8",
+      "section": "validation",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Visual QA of dark sheet: snapshots, contrast audit, regression tests",
+      "details": "Offscreen snapshots (cargo run -p gridcraft-ui-egui --example snapshot) in light/dark of: sales sample, borders, fills, conditional formats, charts, frozen panes, range selection, cell editing, tables, comments. Compare with plan/excel/observed-ui.md and the user screenshot (ABC/1, DEF/2, GHI/3, Total). Add colour-mapping unit tests; run cargo xtask ci.",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS3",
+        "gridcraft-DS4",
+        "gridcraft-DS5",
+        "gridcraft-DS6",
+        "gridcraft-DS7"
+      ]
+    },
+    {
+      "id": "gridcraft-DS9",
+      "section": "main",
+      "status": "todo",
+      "group": "Dark sheet",
+      "model": "haiku",
+      "effort": "low",
+      "short": "Docs: ui-parity.md, ROADMAP.md, observed-ui.md for dark sheet area",
+      "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected).",
+      "done": null,
+      "depends_on": [
+        "gridcraft-DS8"
+      ]
+    }
+  ]
+}
