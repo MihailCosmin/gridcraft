@@ -10,11 +10,11 @@
 //! interface text; no font file is stored in this repo.
 //!
 //! Chrome colours belong in [`Tokens`], each with a light and a dark value, chosen by Display
-//! theme. Colours drawn on the sheet follow the sheet, not Display theme: they come from a
-//! [`SheetColors`] set, light by default and dark when the dark sheet is on (`docs/dark-sheet.md`),
-//! so `Tokens::palette(dark_ui, dark_sheet)` has two axes. The foreground/background pairs are
-//! listed in `contrast_tests`, which holds them to WCAG 2 (4.5:1 for text, 3:1 for glyphs) in all
-//! four combinations: a new token goes there too.
+//! theme. Colours drawn on the sheet come from a [`SheetColors`] set: Display theme Dark shows the
+//! dark sheet too (`docs/dark-sheet.md`), but `Tokens::palette(dark_ui, dark_sheet)` keeps the two
+//! axes apart because Print Preview shows the light (printed) sheet inside a dark interface. The
+//! foreground/background pairs are listed in `contrast_tests`, which holds them to WCAG 2 (4.5:1
+//! for text, 3:1 for glyphs) in every combination: a new token goes there too.
 
 use std::sync::Arc;
 
@@ -43,7 +43,7 @@ pub(crate) use font_setup::{drop_unparseable_fonts, font_parses};
 pub struct Tokens {
     /// Display theme: the interface is dark.
     pub dark: bool,
-    /// The dark sheet is on: the sheet fields (`grid_bg`, `gridline`, `cell_text`, `sel_*`,
+    /// The sheet is dark (Display theme Dark): the sheet fields (`grid_bg`, `gridline`, `cell_text`, `sel_*`,
     /// `active_row`, `error_check_green` and every `sheet_*`) hold [`SheetColors::DARK`].
     pub dark_sheet: bool,
     pub window: Color32,
@@ -300,31 +300,15 @@ impl SheetColors {
     }
 }
 
-/// Where the dark-sheet flag lives in the egui context (`Tokens::get` reads it).
-fn dark_sheet_key() -> egui::Id {
-    egui::Id::unique("gridcraft.dark_sheet")
-}
-
-/// Mirrors the dark-sheet preference into the egui context; the update loop calls it every frame,
-/// and [`Tokens::get`] reads it, so every painter follows without a new parameter.
-pub fn set_dark_sheet(ctx: &egui::Context, on: bool) {
-    ctx.data_mut(|d| d.insert_temp(dark_sheet_key(), on));
-}
-
-/// Whether the dark sheet is on for this context (off until [`set_dark_sheet`] says otherwise).
-pub fn dark_sheet(ctx: &egui::Context) -> bool {
-    ctx.data(|d| d.get_temp::<bool>(dark_sheet_key())).unwrap_or(false)
-}
-
 impl Tokens {
     /// Light interface, light sheet.
     pub fn light() -> Tokens {
         Tokens::palette(false, false)
     }
 
-    /// Dark interface, light sheet (the dark sheet is a separate setting).
+    /// Dark interface, dark sheet: what Display theme Dark shows.
     pub fn dark() -> Tokens {
-        Tokens::palette(true, false)
+        Tokens::palette(true, true)
     }
 
     /// The same tokens with the sheet fields of the other sheet. Print Preview uses
@@ -421,8 +405,10 @@ impl Tokens {
         }
     }
 
+    /// The tokens of the active Display theme: the sheet is dark when the interface is.
     pub fn get(ctx: &egui::Context) -> Tokens {
-        Tokens::palette(ctx.global_style().visuals.dark_mode, dark_sheet(ctx))
+        let dark = ctx.global_style().visuals.dark_mode;
+        Tokens::palette(dark, dark)
     }
 
     /// One colour of the category palette.
@@ -684,7 +670,8 @@ mod contrast_tests {
         Color32::from_rgb(mix(r, under.r()), mix(g, under.g()), mix(b, under.b()))
     }
 
-    /// Display theme × sheet: the interface and the sheet are chosen independently.
+    /// Display theme × sheet. The app shows light/light and dark/dark; Print Preview shows a light
+    /// sheet in a dark interface; light/dark is kept so the palette stays sound in every pairing.
     fn combinations() -> [(&'static str, Tokens); 4] {
         [
             ("light UI, light sheet", Tokens::palette(false, false)),
@@ -729,11 +716,11 @@ mod contrast_tests {
                 (t.sheet_page_outside, t.sheet_page_break, t.sheet_page_watermark),
             )
         };
-        // Display theme alone never changes the sheet, in either sheet.
+        // The interface axis never changes the sheet fields, in either sheet.
         for dark_sheet in [false, true] {
             assert_eq!(sheet_fields(&Tokens::palette(false, dark_sheet)), sheet_fields(&Tokens::palette(true, dark_sheet)));
         }
-        // The dark sheet alone never changes the chrome.
+        // The sheet axis never changes the chrome.
         let (l, d) = (Tokens::palette(false, false), Tokens::palette(false, true));
         assert_ne!(sheet_fields(&l), sheet_fields(&d));
         assert_eq!(
@@ -765,16 +752,19 @@ mod contrast_tests {
     }
 
     #[test]
-    fn tokens_get_reads_the_dark_sheet_flag_from_the_context() {
+    fn tokens_get_darkens_the_sheet_with_the_display_theme() {
         let ctx = egui::Context::default();
-        assert!(!dark_sheet(&ctx), "off until set");
+        apply(&ctx, false);
+        assert_eq!(Tokens::get(&ctx), Tokens::light());
         assert_eq!(Tokens::get(&ctx).grid_bg, Color32::WHITE);
-        set_dark_sheet(&ctx, true);
+        apply(&ctx, true);
         let t = Tokens::get(&ctx);
-        assert!(t.dark_sheet);
+        assert_eq!(t, Tokens::dark());
+        assert!(t.dark && t.dark_sheet);
         assert_eq!(t.grid_bg, SheetColors::DARK.grid_bg);
-        set_dark_sheet(&ctx, false);
-        assert_eq!(Tokens::get(&ctx).grid_bg, Color32::WHITE);
+        // Print Preview: the printed (light) sheet inside the dark interface.
+        let print = t.with_dark_sheet(false);
+        assert_eq!((print.grid_bg, print.window), (Color32::WHITE, t.window));
     }
 
     #[test]

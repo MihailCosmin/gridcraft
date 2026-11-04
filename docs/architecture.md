@@ -1,6 +1,6 @@
 # Architecture
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-11-04 · **Change:** minor (colours drawn on the sheet follow the dark-sheet setting; earlier: Python mode in the formula bar; earlier: Python cells as data; earlier: equations: the `math` crate and the layout cache; earlier: recently used functions kept in the preferences; Function Library module; accent icons; earlier: the hidden names that hold macros) · **Target:** Microsoft Excel (Microsoft 365)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-11-04 · **Change:** minor (Display theme Dark darkens the sheet too; earlier: colours drawn on the sheet follow the dark-sheet setting; earlier: Python mode in the formula bar; earlier: Python cells as data; earlier: equations: the `math` crate and the layout cache; earlier: recently used functions kept in the preferences; Function Library module; accent icons; earlier: the hidden names that hold macros) · **Target:** Microsoft Excel (Microsoft 365)
 
 How GridCraft is built today. Rules for contributors are in [`AGENTS.md`](../AGENTS.md).
 
@@ -55,7 +55,7 @@ including tests, 2026-10-10.
 The panels in `crates/ui-egui` share a few pieces, so a new feature reuses them instead of
 drawing its own:
 
-- **Colours**: `theme::Tokens`, each with a light and a dark value. Colours drawn on the sheet follow the sheet, not Display theme: light by default, dark when the dark sheet is on (`docs/dark-sheet.md`); both sets are held to WCAG 2 by `contrast_tests`. Icons (`icons.rs`, drawn in code) take their paper and category
+- **Colours**: `theme::Tokens`, each with a light and a dark value. Colours drawn on the sheet come from a `SheetColors` set; Display theme Dark shows the dark sheet too (`docs/dark-sheet.md`), and Print Preview keeps the light one; both sets are held to WCAG 2 by `contrast_tests`. Icons (`icons.rs`, drawn in code) take their paper and category
   colours (`theme::Cat`) from the tokens; `icons::paint_accent` gives an icon an accent colour,
   drawn on its coloured part when it has one (the spine and glyph of `Icon::FnBook`).
 - **Ribbon widgets**: `widgets.rs` has the buttons every tab is built from (`big_button`,
@@ -232,6 +232,7 @@ rpm, tarball), FreeBSD, and web (WASM; WebGPU or WebGL2). Release workflows in
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-11-04 | minor | Display theme Dark darkens the sheet too; the separate dark-sheet setting is gone (H3) |
 | 2026-11-04 | minor | Colours drawn on the sheet follow the dark-sheet setting (`icons::paint_on_sheet` takes the sheet palette), not Display theme |
 | 2026-11-02 | minor | Python mode in the formula bar: Python mode on the shared editor, `code_field` and its stop keys; drafts follow their sheet by `model::SheetUid` |
 | 2026-11-02 | minor | Python cells as data: `model::PyCode`, the file forms, calc laying out kept results, the limits on open, and what copying, filling and sorting do to `xl()` references; edits that would push code past the limit are refused |

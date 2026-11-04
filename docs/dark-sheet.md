@@ -1,25 +1,27 @@
 # Dark sheet: design
 
-> **Last updated:** 2026-11-04 · **Change:** cell text, fills, borders, number-format colours, colour scales and data bars follow the colour rule (DS4) · **Target:** a setting Excel does not have
+> **Last updated:** 2026-11-04 · **Change:** the dark sheet comes with Display theme Dark; the separate setting is gone (H3) · **Target:** a setting Excel does not have
 
 A dark sheet shows the cells, not only the interface around them, light-on-dark. It is asked
 for in #1264 (and its duplicate #1736); WordCraft has the same feature for pages
 (storytold/wordcraft#194). This note fixes the behaviour and the colour rules so the code can
-be written in small, separate changes. The feature is built (DS2 to DS14); the open work is the visual QA (DS8), the toggle's ribbon group and snapshot flag (DS15b) and the upstream PRs (DS16). Built: the sheet colour tokens (DS2), the setting (DS15), the grid itself (DS3: background, gridlines, merged-cell backdrop, selection, fill handle, drag outlines, frozen-pane lines) and the cells (DS4: `theme::ink` / `ink_guarded`; font colours of every kind, fills, pattern fills, borders, number-format colours, conditional-format fonts, fills, colour scales and data bars, table and cell styles, the in-cell editor). Not yet: charts, shapes, comments, sparklines and GridCraft's own overlays (DS5, DS10), dialog previews (DS14).
+be written in small, separate changes. The feature is built (DS2 to DS14); the open work is the visual QA (DS8) and the upstream PRs (DS16). Built: the sheet colour tokens (DS2), the switch (DS15, then folded into Display theme by H3), the grid itself (DS3: background, gridlines, merged-cell backdrop, selection, fill handle, drag outlines, frozen-pane lines) and the cells (DS4: `theme::ink` / `ink_guarded`; font colours of every kind, fills, pattern fills, borders, number-format colours, conditional-format fonts, fills, colour scales and data bars, table and cell styles, the in-cell editor). Not yet: charts, shapes, comments, sparklines and GridCraft's own overlays (DS5, DS10), dialog previews (DS14).
 
 ## What the user gets
 
-- **View › Switch Modes** (a toggle button in the View tab, next to Display theme) and a
-  **File › Options › General** checkbox, *Dark sheet (light text on dark cells)*, turn it on and
-  off. Its tooltip: *Show the cells with their colours inverted. Saving, printing and PDFs are
-  unchanged.* Both run one command (see [Command](#command)).
-- **Off by default**, also when Display theme is Dark. It is a user preference like
-  *Highlight the active cell's row*: kept in `UiState` (`ui.json` on the desktop,
-  `localStorage` on the web), read as off from settings saved before it existed. Turning it on
-  or off never changes the workbook: no dirty flag, no undo step, the file stays byte-identical.
-- **Separate from Display theme.** Display theme colours the interface (ribbon, headers,
-  formula bar, sheet tabs, scroll bars, status bar, dialogs); the dark sheet colours the cells.
-  All four combinations are allowed: light interface with a dark sheet included.
+- **Display theme Dark shows the dark sheet.** Choosing *Dark* in View › Display theme or
+  File › Options › General, the title-bar Dark Mode switch (`view.darkMode`), or *System* on a
+  dark desktop darkens the interface (ribbon, headers, formula bar, sheet tabs, scroll bars,
+  status bar, dialogs) and the cells together; *Light* shows both light. There is no separate
+  setting: the user decided (tasklist H3, 04.11.2026) that one switch does both. An earlier
+  build had an opt-in `view.darkSheet` setting; it is gone, and a `darkSheet` key left in an
+  old `ui.json` is ignored.
+- **Light by default**, as Display theme is. The theme is a preference kept in `UiState`
+  (`ui.json` on the desktop, `localStorage` on the web). Switching it never changes the workbook:
+  no dirty flag, no undo step, the file stays byte-identical.
+- **Consequence for the default look:** anyone who already uses Display theme Dark, or System on
+  a dark desktop, sees dark cells after updating. Upstream maintainers hold changing the default
+  look as their decision (PR #177), so the upstream PR states it plainly (DS16).
 - **Screen only.** Save, Print and Print Preview, PDF/PNG export, Copy as Picture, the HTML/RTF
   clipboard and Save as Web Page use the authored colours, exactly as with the setting off.
 
@@ -112,16 +114,11 @@ follow Display theme, not the dark sheet.
 
 ## Command
 
-The decided id is **`view.darkMode`**, as in WordCraft. GridCraft already uses that id for the
-older light/dark *interface* switch (the title-bar Dark Mode button, documented in
-`docs/control-protocol.md` as legacy). Reusing it breaks control-channel, CLI and MCP clients
-that call it; a new id keeps them working but differs from WordCraft. Which one is the user's
-decision (tasklist H3); until it is taken, code and docs say *the dark-sheet command*.
-
-Either way the command behaves like the other GridCraft toggles: params `{on?: bool}` (without
-`on` it toggles; WordCraft's `value` is accepted as an alias), returns `{on}`, never opens a
-dialog, is listed by `engine.commands`, and is reachable over the control channel, CLI and MCP.
-The offscreen `snapshot` example gets a `--dark-sheet` flag.
+No new command. The existing theme commands switch the sheet with the interface:
+`view.theme {mode: "system" | "light" | "dark"}` and the older `view.darkMode {on?: bool}`
+(the title-bar switch; the id WordCraft uses for its dark page). Both are reachable over the
+control channel, CLI and MCP and never open a dialog. The offscreen `snapshot` example's
+`--dark` flag renders the dark interface with the dark sheet.
 
 ## How it is built
 
@@ -129,10 +126,11 @@ The offscreen `snapshot` example gets a `--dark-sheet` flag.
   fields (`grid_bg`, `gridline`, `cell_text`, `sel_border`, `sel_fill`, `active_row`,
   `sheet_ref_colors`, `sheet_control_*`, `sheet_track`, `sheet_macro_*`, `sheet_py_tag`,
   `on_sheet_py_tag`, `sheet_trace_*`, plus a sheet error-check green) take their values from a
-  `SheetColors` set, `LIGHT` or `DARK`, chosen by the dark-sheet flag rather than by Display
-  theme: `Tokens::palette(dark_ui, dark_sheet)`. The update loop mirrors `UiState`'s flag into
-  the egui context each frame, and `Tokens::get` reads it, so every painter that already calls
-  `Tokens::get` follows without new parameters. `contrast_tests` runs all four combinations.
+  `SheetColors` set, `LIGHT` or `DARK`: `Tokens::palette(dark_ui, dark_sheet)`. `Tokens::get`
+  passes the Display theme for both axes, so every painter that already calls `Tokens::get`
+  follows without new parameters. The axes stay apart for Print Preview, which shows the light
+  (printed) sheet inside a dark interface (`Tokens::with_dark_sheet(false)`). `contrast_tests`
+  runs all four combinations.
 - **The mapping lives in the UI crate**, in `theme` (`ink`, `ink_guarded`), next to `contrast`.
   It reuses the HSL helpers of `crates/model/src/style.rs` (`rgb_to_hsl`, `hsl_to_rgb`, made
   public) instead of copying them. Nothing below the UI crate changes: the model, the XLSX
@@ -145,17 +143,18 @@ The offscreen `snapshot` example gets a `--dark-sheet` flag.
   `text_box.rs`, `equation.rs` and the `Tokens::light()` trace arrows in `grid/show.rs` read the
   sheet colours instead.
 - **Guarantees as tests:** the mapping (white, black, hues, the guard), every sheet pair in all
-  four token combinations, off by default and old settings read as off, the preference round
-  trip, no dirty flag or undo step, export and print output byte-identical with the setting on
+  four token combinations, light by default, Display theme Dark / `view.darkMode` / System
+  darkening the sheet with the interface (`tests/it/dark_sheet_setting.rs`, `system_theme.rs`),
+  the theme round trip, no dirty flag or undo step, export and print output byte-identical with the setting on
   and off, and offscreen snapshots of the sales sample in light and dark.
 
 ## Wording to replace "the sheet stays white"
 
 Applied in DS9: `theme.rs` (module doc), `icons.rs` (`paint_on_sheet`, now on the sheet palette) and
 `docs/architecture.md` (*UI building blocks*) changed from "the sheet stays white in both themes"
-to: *colours drawn on the sheet follow the sheet, not Display
-theme: light by default, dark when the dark sheet is on (`docs/dark-sheet.md`); both sets are
-held to WCAG 2 by `contrast_tests`.*
+to (rewritten after H3): *colours drawn on the sheet come from a `SheetColors` set; Display
+theme Dark shows the dark sheet too (`docs/dark-sheet.md`); both sets are held to WCAG 2 by
+`contrast_tests`.*
 
 ## Earlier proposals
 
@@ -167,10 +166,13 @@ held to WCAG 2 by `contrast_tests`.*
   explicitly, so much of a typical workbook would not change.
 - **PR #177** darkens the canvas as part of the dark interface theme and recolours workbook
   colours with the same HSL lightness mirror. The maintainers hold changing the default look
-  for everyone as their decision and asked for the PR to be split; hence opt-in and separate
-  from Display theme here.
-- **WordCraft #194** is the sibling precedent this note follows: the same menu places, the same
-  inversion and lift, screen only, remembered between runs. Its paper grey (`#333333`) is used
+  for everyone as their decision and asked for the PR to be split. This design first kept the
+  dark sheet opt-in and separate from Display theme for that reason; the user then decided (H3)
+  that Display theme Dark darkens the sheet too, as #177 does, so the PR must say that dark-theme
+  users get dark cells and leave the call to the maintainers.
+- **WordCraft #194** is the sibling precedent for the colour rule: the same inversion and lift,
+  screen only, remembered between runs. Unlike WordCraft, GridCraft has no separate switch: the
+  dark page comes with the dark theme. Its paper grey (`#333333`) is used
   unchanged so the two apps look alike side by side.
 
 ## Revision history
@@ -182,3 +184,4 @@ held to WCAG 2 by `contrast_tests`.*
 | 2026-11-04 | DS3 | `SheetColors` gains `freeze_line`, `handle_halo`, `drag_outline` (tokens `sheet_*`); the merged-cell backdrop, fill handle, drag outlines and frozen lines read tokens; split cursor follows Display theme; `snapshot --dark-sheet`; pixel test of background and gridlines |
 | 2026-11-04 | DS9 | Docs: ui-parity.md, ROADMAP.md, architecture.md updated; `icons::paint_on_sheet` takes the sheet palette (was fixed light); "sheet stays white" wording replaced |
 | 2026-11-04 | DS4 | `theme::ink`, `theme::ink_guarded` (cached per pair, `INK_TEXT_MIN` 4.5, `INK_LINE_MIN` 3); `grid/cell_paint.rs` `look(…, dark)` maps fills and text and keeps the authored `paper` for the guard; borders, `[Red]`-style colours and data bars mapped in `grid/quadrant.rs`; the in-cell editor paints the mapped fill with guarded automatic text; `model::style::rgb_to_hsl` / `hsl_to_rgb` public |
+| 2026-11-04 | H3 | The user decided one switch for both: `Tokens::get` takes the sheet from Display theme; `view.darkSheet`, `UiState.dark_sheet`, the View tab and Options checkboxes, `theme::set_dark_sheet` / `dark_sheet` and `snapshot --dark-sheet` removed; `Tokens::dark()` is dark/dark |

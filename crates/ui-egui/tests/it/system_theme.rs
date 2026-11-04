@@ -58,6 +58,8 @@ fn assert_appearance(h: &egui_kittest::Harness<'static, SheetApp>, dark: bool) {
     assert_eq!(visuals.panel_fill, tokens.window);
     assert_eq!(visuals.window_fill, tokens.menu_bg);
     assert_eq!(visuals.selection.bg_fill, tokens.accent_soft);
+    // The sheet goes dark with the interface (System, the title-bar switch, view.darkMode, ui.set).
+    assert_eq!(Tokens::get(&h.ctx), tokens);
 }
 
 #[test]

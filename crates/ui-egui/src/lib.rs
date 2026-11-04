@@ -100,9 +100,6 @@ pub struct UiState {
     /// Tint the active cell's whole row (File ▸ Options ▸ General), on every sheet and workbook, so
     /// the eye keeps its place across a wide table. A preference: nothing goes into the file.
     pub highlight_active_row: bool,
-    /// Dark sheet (View ▸ Switch Modes, File ▸ Options ▸ General): the cells are shown with their
-    /// colours inverted. Screen only; nothing goes into the file. Off by default.
-    pub dark_sheet: bool,
     /// AutoSave (the title-bar switch): save saved-to-file .xlsx workbooks shortly after every
     /// change. A preference like the rest of this struct — it stays on across restarts (#1901).
     pub autosave: bool,
@@ -155,7 +152,6 @@ impl Default for UiState {
             animations: true,
             autocomplete: true,
             highlight_active_row: false,
-            dark_sheet: false,
             autosave: false,
             recent: vec![],
             keytip_invoke: None,

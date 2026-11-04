@@ -125,12 +125,15 @@ gate on every test run, so a version bump has to pass it. RaTeX positions glyphs
 font metrics; GridCraft never bundles the KaTeX fonts, so glyphs are drawn with system fonts
 and a glyph no font has is drawn as a `[?]` box.
 
-## The dark sheet is an opt-in view setting with WordCraft's colour rule (#1264)
+## The dark sheet comes with Display theme Dark, with WordCraft's colour rule (#1264)
 
-The dark sheet (light text on dark cells) is a user preference, off by default and separate
-from Display theme, turned on from View › Switch Modes or File › Options, as WordCraft's dark
-page (storytold/wordcraft#194). Changing the default look for everyone stays the maintainers'
-decision, so neither Display theme Dark nor System darkens the cells. On screen only, every
+The dark sheet (light text on dark cells) is part of Display theme: Dark (from View, File ›
+Options, the title-bar switch `view.darkMode`, or System on a dark desktop) darkens the
+interface and the cells together; there is no separate setting. This was first designed as an
+opt-in setting separate from the theme, like WordCraft's dark page (storytold/wordcraft#194),
+because upstream maintainers hold changing the default look as their decision; on 04.11.2026
+the user decided one switch should do both (tasklist H3), and the upstream PR says that
+dark-theme users get dark cells so the maintainers can weigh it. On screen only, every
 workbook colour has its HSL lightness inverted with hue and saturation kept, lifted so white
 becomes `#333333`; a contrast guard lifts mapped text that would fall below 4.5:1 (or below
 the authored contrast, if lower). Pictures, files, printing and export are unchanged. Details:
