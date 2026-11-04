@@ -9,10 +9,12 @@
 //! into craft-fonts' OFL LXGW Chinese face, so a host without a Han system face still draws Chinese
 //! interface text; no font file is stored in this repo.
 //!
-//! Chrome colours belong in [`Tokens`], each with a light and a dark value; colours
-//! drawn on the sheet keep their light value in both themes, because the sheet stays white. The
-//! foreground/background pairs are listed in `contrast_tests`, which holds them to WCAG 2 (4.5:1
-//! for text, 3:1 for glyphs) in both themes: a new token goes there too.
+//! Chrome colours belong in [`Tokens`], each with a light and a dark value, chosen by Display
+//! theme. Colours drawn on the sheet follow the sheet, not Display theme: they come from a
+//! [`SheetColors`] set, light by default and dark when the dark sheet is on (`docs/dark-sheet.md`),
+//! so `Tokens::palette(dark_ui, dark_sheet)` has two axes. The foreground/background pairs are
+//! listed in `contrast_tests`, which holds them to WCAG 2 (4.5:1 for text, 3:1 for glyphs) in all
+//! four combinations: a new token goes there too.
 
 use std::sync::Arc;
 
@@ -39,7 +41,11 @@ pub(crate) use font_setup::{drop_unparseable_fonts, font_parses};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Tokens {
+    /// Display theme: the interface is dark.
     pub dark: bool,
+    /// The dark sheet is on: the sheet fields (`grid_bg`, `gridline`, `cell_text`, `sel_*`,
+    /// `active_row`, `error_check_green` and every `sheet_*`) hold [`SheetColors::DARK`].
+    pub dark_sheet: bool,
     pub window: Color32,
     pub ribbon: Color32,
     pub ribbon_border: Color32,
@@ -75,7 +81,7 @@ pub struct Tokens {
     pub menu_bg: Color32,
     pub shadow: Color32,
     pub danger: Color32,
-    /// Background error checking: the corner triangle, and the warning button's diamond and mark.
+    /// Background error checking: the corner triangle on a cell. A sheet colour.
     pub error_check_green: Color32,
     pub warning_fill: Color32,
     pub warning_ink: Color32,
@@ -92,7 +98,7 @@ pub struct Tokens {
     pub paper: Color32,
     /// Reference colours for formulas edited in the window-coloured formula bar.
     pub ref_colors: [Color32; 8],
-    /// Reference colours on the sheet (outlines and the in-cell editor). The sheet stays white.
+    /// Reference colours on the sheet (outlines and the in-cell editor). Sheet colours.
     pub sheet_ref_colors: [Color32; 8],
     /// Code colours in the code editor (and the window-coloured fields it sits in).
     pub syntax: Syntax,
@@ -100,7 +106,7 @@ pub struct Tokens {
     pub warning: Color32,
     pub on_warning: Color32,
     /// Controls drawn on the sheet (filter and validation buttons, object handles). They follow
-    /// the sheet, so they are light in both themes.
+    /// the sheet, not Display theme.
     pub sheet_control_bg: Color32,
     pub sheet_control_border: Color32,
     pub sheet_control_text: Color32,
@@ -119,8 +125,7 @@ pub struct Tokens {
     /// The PY badge in the formula bar (Python mode) and its text.
     pub badge_py: Color32,
     pub on_badge: Color32,
-    /// The PY tag on a Python cell and its text. They follow the sheet, so they are the same in
-    /// both themes.
+    /// The PY tag on a Python cell and its text. They follow the sheet, not Display theme.
     pub sheet_py_tag: Color32,
     pub on_sheet_py_tag: Color32,
     /// Trace arrows on the sheet: precedents and dependents, and the links Trace Error follows
@@ -146,22 +151,17 @@ impl Cat {
     pub const ALL: [Cat; 8] = [Cat::Blue, Cat::Green, Cat::Orange, Cat::Red, Cat::Purple, Cat::Teal, Cat::Amber, Cat::Slate];
 }
 
+/// A translucent colour from straight (unmultiplied) channels, usable in constants.
+const fn tint(r: u8, g: u8, b: u8, a: u8) -> Color32 {
+    const fn m(c: u8, a: u8) -> u8 {
+        ((c as u16 * a as u16 + 127) / 255) as u8
+    }
+    Color32::from_rgba_premultiplied(m(r, a), m(g, a), m(b, a), a)
+}
+
 const fn rgb(hex: u32) -> Color32 {
     Color32::from_rgb((hex >> 16) as u8, (hex >> 8) as u8, hex as u8)
 }
-
-/// Reference colours on the white sheet, the same in both themes (the sheet does not follow the
-/// theme). The light theme's formula bar is white too, so it uses them as well.
-const SHEET_REF_COLORS: [Color32; 8] =
-    [rgb(0x2E6FD8), rgb(0xD03C3C), rgb(0x7A4FC9), rgb(0x23803D), rgb(0xB5531A), rgb(0x16798A), rgb(0xB83B8E), rgb(0x77681A)];
-/// Macro overlays on the sheet, the same in both themes (the sheet stays white).
-const SHEET_MACRO_INPUT: Color32 = rgb(0x2E6FD8);
-const SHEET_MACRO_FOOTPRINT: Color32 = rgb(0x23803D);
-const SHEET_MACRO_CONFLICT: Color32 = rgb(0xC42B1C);
-const SHEET_MACRO_TARGET: Color32 = rgb(0x6B3FC0);
-/// Trace arrows on the sheet, the same in both themes.
-const SHEET_TRACE_ARROW: Color32 = rgb(0x1F5FC9);
-const SHEET_TRACE_ERROR: Color32 = rgb(0xD13438);
 
 /// Code colours for one background; plain text uses the surface's own text colour.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -177,26 +177,139 @@ const LIGHT_SYNTAX: Syntax =
     Syntax { keyword: rgb(0x0B57B3), string: rgb(0xA3361B), number: rgb(0x157A5A), comment: rgb(0x6B7280), builtin: rgb(0x7B3FB5) };
 const DARK_SYNTAX: Syntax =
     Syntax { keyword: rgb(0x6FAEFF), string: rgb(0xF09A7A), number: rgb(0x7FD1A8), comment: rgb(0x9AA3AE), builtin: rgb(0xC69BF2) };
-const SHEET_CONTROL_BG: Color32 = rgb(0xF3F3F3);
-const SHEET_CONTROL_BORDER: Color32 = rgb(0x8A8A8A);
-const SHEET_CONTROL_TEXT: Color32 = rgb(0x1F1F1F);
-const SHEET_TRACK: Color32 = rgb(0xD6D6D6);
-/// The PY tag on Python cells: a deep green, white text on it.
-const SHEET_PY_TAG: Color32 = rgb(0x1E6E4E);
+
+/// Every colour GridCraft itself draws on the sheet, for one sheet: the light sheet (today's look,
+/// the default) or the dark sheet (`docs/dark-sheet.md`). These are not workbook colours (those
+/// are mapped per cell by the dark-sheet colour rule); `contrast_tests` holds each value against
+/// the sheet it sits on.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SheetColors {
+    /// Cell background where no fill is set.
+    pub grid_bg: Color32,
+    pub gridline: Color32,
+    /// Automatic (unset) font colour.
+    pub cell_text: Color32,
+    /// Selection outline, fill handle and active cell.
+    pub sel_border: Color32,
+    pub sel_fill: Color32,
+    pub active_row: Color32,
+    /// Formula reference outlines and the in-cell editor's references.
+    pub ref_colors: [Color32; 8],
+    /// Filter, validation and paste-options buttons, object handles.
+    pub control_bg: Color32,
+    pub control_border: Color32,
+    pub control_text: Color32,
+    /// Picture placeholder.
+    pub track: Color32,
+    pub macro_input: Color32,
+    pub macro_footprint: Color32,
+    pub macro_conflict: Color32,
+    pub macro_target: Color32,
+    /// The PY tag on a Python cell, and its text.
+    pub py_tag: Color32,
+    pub on_py_tag: Color32,
+    pub trace_arrow: Color32,
+    pub trace_error: Color32,
+    /// The error-checking triangle in a cell's corner.
+    pub error_check_green: Color32,
+}
+
+impl SheetColors {
+    /// The default sheet: white, as it has always been.
+    pub const LIGHT: SheetColors = SheetColors {
+        grid_bg: Color32::WHITE,
+        gridline: rgb(0xE1E1E1),
+        cell_text: Color32::BLACK,
+        sel_border: rgb(0x107C41),
+        sel_fill: tint(0x10, 0x7C, 0x41, 0x1C),
+        active_row: tint(0x10, 0x7C, 0x41, 0x2C),
+        ref_colors: [rgb(0x2E6FD8), rgb(0xD03C3C), rgb(0x7A4FC9), rgb(0x23803D), rgb(0xB5531A), rgb(0x16798A), rgb(0xB83B8E), rgb(0x77681A)],
+        control_bg: rgb(0xF3F3F3),
+        control_border: rgb(0x8A8A8A),
+        control_text: rgb(0x1F1F1F),
+        track: rgb(0xD6D6D6),
+        macro_input: rgb(0x2E6FD8),
+        macro_footprint: rgb(0x23803D),
+        macro_conflict: rgb(0xC42B1C),
+        macro_target: rgb(0x6B3FC0),
+        // A deep green, white text on it.
+        py_tag: rgb(0x1E6E4E),
+        on_py_tag: Color32::WHITE,
+        trace_arrow: rgb(0x1F5FC9),
+        trace_error: rgb(0xD13438),
+        error_check_green: rgb(0x1E8E3E),
+    };
+
+    /// The dark sheet: WordCraft's paper grey `#333333`, light text, the same hues lifted.
+    pub const DARK: SheetColors = SheetColors {
+        grid_bg: rgb(0x333333),
+        gridline: rgb(0x4B4B4B),
+        cell_text: Color32::WHITE,
+        sel_border: rgb(0x5CC587),
+        sel_fill: tint(0x5C, 0xC5, 0x87, 0x24),
+        active_row: tint(0x6F, 0xD3, 0x9A, 0x30),
+        ref_colors: [rgb(0x6FA3F5), rgb(0xF27C7C), rgb(0xB394EE), rgb(0x6CCB85), rgb(0xF0A061), rgb(0x5CC9DA), rgb(0xE77FC4), rgb(0xD4C25A)],
+        control_bg: rgb(0x3C3C3C),
+        control_border: rgb(0x9A9A9A),
+        control_text: rgb(0xEEEEEE),
+        track: rgb(0x4A4A4A),
+        macro_input: rgb(0x6FA3F5),
+        macro_footprint: rgb(0x6CCB85),
+        macro_conflict: rgb(0xF1705F),
+        macro_target: rgb(0xB394EE),
+        py_tag: rgb(0x5CBF94),
+        on_py_tag: rgb(0x0B1F17),
+        trace_arrow: rgb(0x6FA3F5),
+        trace_error: rgb(0xF1707A),
+        error_check_green: rgb(0x4CC26B),
+    };
+
+    /// The set for a sheet: dark when the dark sheet is on.
+    pub const fn of(dark_sheet: bool) -> SheetColors {
+        if dark_sheet { SheetColors::DARK } else { SheetColors::LIGHT }
+    }
+}
+
+/// Where the dark-sheet flag lives in the egui context (`Tokens::get` reads it).
+fn dark_sheet_key() -> egui::Id {
+    egui::Id::unique("gridcraft.dark_sheet")
+}
+
+/// Mirrors the dark-sheet preference into the egui context; the update loop calls it every frame,
+/// and [`Tokens::get`] reads it, so every painter follows without a new parameter.
+pub fn set_dark_sheet(ctx: &egui::Context, on: bool) {
+    ctx.data_mut(|d| d.insert_temp(dark_sheet_key(), on));
+}
+
+/// Whether the dark sheet is on for this context (off until [`set_dark_sheet`] says otherwise).
+pub fn dark_sheet(ctx: &egui::Context) -> bool {
+    ctx.data(|d| d.get_temp::<bool>(dark_sheet_key())).unwrap_or(false)
+}
 
 impl Tokens {
+    /// Light interface, light sheet.
     pub fn light() -> Tokens {
-        Tokens::palette(false)
+        Tokens::palette(false, false)
     }
 
+    /// Dark interface, light sheet (the dark sheet is a separate setting).
     pub fn dark() -> Tokens {
-        Tokens::palette(true)
+        Tokens::palette(true, false)
     }
 
-    /// One palette for both modes: each colour is written once, with its light and dark values.
-    fn palette(dark: bool) -> Tokens {
+    /// The same tokens with the sheet fields of the other sheet. Print Preview uses
+    /// `with_dark_sheet(false)`: it shows what will print.
+    pub fn with_dark_sheet(self, dark_sheet: bool) -> Tokens {
+        Tokens::palette(self.dark, dark_sheet)
+    }
+
+    /// One palette for every combination: the chrome fields take their light or dark value by
+    /// Display theme (`dark`), the sheet fields come from [`SheetColors::of`]`(dark_sheet)`.
+    pub fn palette(dark: bool, dark_sheet: bool) -> Tokens {
+        let sheet = SheetColors::of(dark_sheet);
         Tokens {
             dark,
+            dark_sheet,
             window: pick(dark, Color32::from_rgb(0xF3, 0xF3, 0xF3), Color32::from_rgb(0x29, 0x29, 0x29)),
             ribbon: pick(dark, Color32::from_rgb(0xFF, 0xFF, 0xFF), Color32::from_rgb(0x33, 0x33, 0x33)),
             ribbon_border: pick(dark, Color32::from_rgb(0xE3, 0xE3, 0xE3), Color32::from_rgb(0x40, 0x40, 0x40)),
@@ -209,28 +322,28 @@ impl Tokens {
             hover: pick(dark, Color32::from_rgb(0xEB, 0xEB, 0xEB), Color32::from_rgb(0x42, 0x42, 0x42)),
             pressed: pick(dark, Color32::from_rgb(0xDD, 0xDD, 0xDD), Color32::from_rgb(0x4D, 0x4D, 0x4D)),
             separator: pick(dark, Color32::from_rgb(0xE0, 0xE0, 0xE0), Color32::from_rgb(0x48, 0x48, 0x48)),
-            grid_bg: Color32::WHITE,
+            grid_bg: sheet.grid_bg,
             desk: pick(dark, Color32::from_rgb(0xDE, 0xDE, 0xDE), Color32::from_rgb(0x3A, 0x3A, 0x3A)),
-            gridline: Color32::from_rgb(0xE1, 0xE1, 0xE1),
+            gridline: sheet.gridline,
             header_bg: pick(dark, Color32::from_rgb(0xF8, 0xF8, 0xF8), Color32::from_rgb(0x30, 0x30, 0x30)),
             header_text: pick(dark, Color32::from_rgb(0x42, 0x42, 0x42), Color32::from_rgb(0xCC, 0xCC, 0xCC)),
             header_line: pick(dark, Color32::from_rgb(0xD6, 0xD6, 0xD6), Color32::from_rgb(0x45, 0x45, 0x45)),
             header_sel_bg: pick(dark, Color32::from_rgb(0xE1, 0xE1, 0xE1), Color32::from_rgb(0x45, 0x45, 0x45)),
             header_sel_text: pick(dark, Color32::from_rgb(0x0B, 0x5E, 0x31), Color32::from_rgb(0x6F, 0xD3, 0x9A)),
             header_all_bg: pick(dark, Color32::from_rgb(0xC8, 0xE6, 0xD3), Color32::from_rgb(0x2E, 0x55, 0x3E)),
-            sel_fill: pick(dark, Color32::from_rgba_unmultiplied(0x10, 0x7C, 0x41, 0x1C), Color32::from_rgba_unmultiplied(0x10, 0x7C, 0x41, 0x24)),
-            active_row: pick(dark, Color32::from_rgba_unmultiplied(0x10, 0x7C, 0x41, 0x2C), Color32::from_rgba_unmultiplied(0x6F, 0xD3, 0x9A, 0x30)),
-            sel_border: Color32::from_rgb(0x10, 0x7C, 0x41),
+            sel_fill: sheet.sel_fill,
+            active_row: sheet.active_row,
+            sel_border: sheet.sel_border,
             input_bg: pick(dark, Color32::WHITE, Color32::from_rgb(0x1F, 0x1F, 0x1F)),
             input_border: pick(dark, Color32::from_rgb(0xD1, 0xD1, 0xD1), Color32::from_rgb(0x50, 0x50, 0x50)),
             tab_bar: pick(dark, Color32::from_rgb(0xF3, 0xF3, 0xF3), Color32::from_rgb(0x29, 0x29, 0x29)),
             tab_active: pick(dark, Color32::WHITE, Color32::from_rgb(0x3A, 0x3A, 0x3A)),
             status_bar: pick(dark, Color32::from_rgb(0xF3, 0xF3, 0xF3), Color32::from_rgb(0x29, 0x29, 0x29)),
-            cell_text: Color32::BLACK,
+            cell_text: sheet.cell_text,
             menu_bg: pick(dark, Color32::WHITE, Color32::from_rgb(0x30, 0x30, 0x30)),
             shadow: pick(dark, Color32::from_black_alpha(40), Color32::from_black_alpha(90)),
             danger: pick(dark, Color32::from_rgb(0xC4, 0x2B, 0x1C), Color32::from_rgb(0xFF, 0x95, 0x85)),
-            error_check_green: pick(dark, Color32::from_rgb(0x1E, 0x8E, 0x3E), Color32::from_rgb(0x4C, 0xC2, 0x6B)),
+            error_check_green: sheet.error_check_green,
             warning_fill: Color32::from_rgb(0xF2, 0xB7, 0x05),
             warning_ink: Color32::BLACK,
             notice_warn_bg: pick(dark, Color32::from_rgb(0xFF, 0xF4, 0xCE), Color32::from_rgb(0x4A, 0x3F, 0x1E)),
@@ -246,34 +359,34 @@ impl Tokens {
             paper: pick(dark, Color32::WHITE, rgb(0x454545)),
             ref_colors: pick(
                 dark,
-                SHEET_REF_COLORS,
+                SheetColors::LIGHT.ref_colors,
                 [rgb(0x6FA3F5), rgb(0xF27C7C), rgb(0xB394EE), rgb(0x6CCB85), rgb(0xF0A061), rgb(0x5CC9DA), rgb(0xE77FC4), rgb(0xD4C25A)],
             ),
-            sheet_ref_colors: SHEET_REF_COLORS,
+            sheet_ref_colors: sheet.ref_colors,
             syntax: pick(dark, LIGHT_SYNTAX, DARK_SYNTAX),
             warning: rgb(0xF2C32E),
             on_warning: rgb(0x1F1F1F),
-            sheet_control_bg: SHEET_CONTROL_BG,
-            sheet_control_border: SHEET_CONTROL_BORDER,
-            sheet_control_text: SHEET_CONTROL_TEXT,
-            sheet_track: SHEET_TRACK,
+            sheet_control_bg: sheet.control_bg,
+            sheet_control_border: sheet.control_border,
+            sheet_control_text: sheet.control_text,
+            sheet_track: sheet.track,
             recording: pick(dark, rgb(0xC42B1C), rgb(0xF1705F)),
             breakpoint: pick(dark, rgb(0xD13438), rgb(0xF1707A)),
-            sheet_macro_input: SHEET_MACRO_INPUT,
-            sheet_macro_footprint: SHEET_MACRO_FOOTPRINT,
-            sheet_macro_conflict: SHEET_MACRO_CONFLICT,
-            sheet_macro_target: SHEET_MACRO_TARGET,
-            badge_py: pick(dark, SHEET_PY_TAG, rgb(0x5CBF94)),
+            sheet_macro_input: sheet.macro_input,
+            sheet_macro_footprint: sheet.macro_footprint,
+            sheet_macro_conflict: sheet.macro_conflict,
+            sheet_macro_target: sheet.macro_target,
+            badge_py: pick(dark, SheetColors::LIGHT.py_tag, rgb(0x5CBF94)),
             on_badge: pick(dark, Color32::WHITE, rgb(0x0B1F17)),
-            sheet_py_tag: SHEET_PY_TAG,
-            on_sheet_py_tag: Color32::WHITE,
-            sheet_trace_arrow: SHEET_TRACE_ARROW,
-            sheet_trace_error: SHEET_TRACE_ERROR,
+            sheet_py_tag: sheet.py_tag,
+            on_sheet_py_tag: sheet.on_py_tag,
+            sheet_trace_arrow: sheet.trace_arrow,
+            sheet_trace_error: sheet.trace_error,
         }
     }
 
     pub fn get(ctx: &egui::Context) -> Tokens {
-        if ctx.global_style().visuals.dark_mode { Tokens::dark() } else { Tokens::light() }
+        Tokens::palette(ctx.global_style().visuals.dark_mode, dark_sheet(ctx))
     }
 
     /// One colour of the category palette.
@@ -361,7 +474,7 @@ mod contrast_tests {
     const GLYPH: f32 = 3.0;
 
     /// Every foreground/background pair the chrome draws: ribbon, popups, dialogs, panes, formula
-    /// bar, status bar, plus the colours that sit on the white sheet.
+    /// bar, status bar, plus the colours that sit on the sheet (light or dark).
     fn pairs(t: &Tokens) -> Vec<(String, Color32, Color32, f32)> {
         let mut v: Vec<(String, Color32, Color32, f32)> = Vec::new();
         let mut add = |name: &str, fg: Color32, bg: Color32, min: f32| v.push((name.to_string(), fg, bg, min));
@@ -408,6 +521,12 @@ mod contrast_tests {
             add(&format!("sheet reference {i}"), *c, t.grid_bg, TEXT);
         }
         add("selection border on sheet", t.sel_border, t.grid_bg, GLYPH);
+        add("error-check triangle on sheet", t.error_check_green, t.grid_bg, GLYPH);
+        // The tints are translucent: judge the ink under them (cell text over the blended tint).
+        for (name, tint) in [("selection tint", t.sel_fill), ("active-row tint", t.active_row)] {
+            add(&format!("cell text under {name}"), t.cell_text, over(tint, t.grid_bg), TEXT);
+            add(&format!("sheet reference 0 outline under {name}"), t.sheet_ref_colors[0], over(tint, t.grid_bg), GLYPH);
+        }
         add("sheet control text", t.sheet_control_text, t.sheet_control_bg, TEXT);
         add("sheet control border on sheet", t.sheet_control_border, t.grid_bg, GLYPH);
         add("recording dot on ribbon", t.recording, t.ribbon, GLYPH);
@@ -436,14 +555,33 @@ mod contrast_tests {
         v
     }
 
+    /// A translucent colour over an opaque one, as the painter blends it.
+    fn over(top: Color32, under: Color32) -> Color32 {
+        let a = f32::from(top.a()) / 255.0;
+        let mix = |t: u8, u: u8| (f32::from(t) * a + f32::from(u) * (1.0 - a)).round() as u8;
+        // `Color32` stores premultiplied alpha; `to_srgba_unmultiplied` gives the straight colour.
+        let [r, g, b, _] = top.to_srgba_unmultiplied();
+        Color32::from_rgb(mix(r, under.r()), mix(g, under.g()), mix(b, under.b()))
+    }
+
+    /// Display theme × sheet: the interface and the sheet are chosen independently.
+    fn combinations() -> [(&'static str, Tokens); 4] {
+        [
+            ("light UI, light sheet", Tokens::palette(false, false)),
+            ("dark UI, light sheet", Tokens::palette(true, false)),
+            ("light UI, dark sheet", Tokens::palette(false, true)),
+            ("dark UI, dark sheet", Tokens::palette(true, true)),
+        ]
+    }
+
     #[test]
-    fn token_pairs_meet_wcag_contrast_in_both_themes() {
+    fn token_pairs_meet_wcag_contrast_in_every_theme_and_sheet() {
         let mut failures = Vec::new();
-        for t in [Tokens::light(), Tokens::dark()] {
+        for (label, t) in combinations() {
             for (name, fg, bg, min) in pairs(&t) {
                 let ratio = contrast(fg, bg);
                 if ratio < min {
-                    failures.push(format!("{} theme: {name} is {ratio:.2}:1, needs {min}:1", if t.dark { "dark" } else { "light" }));
+                    failures.push(format!("{label}: {name} is {ratio:.2}:1, needs {min}:1"));
                 }
             }
         }
@@ -460,21 +598,61 @@ mod contrast_tests {
 
     #[test]
     fn sheet_tokens_follow_the_sheet_not_the_theme() {
-        let (l, d) = (Tokens::light(), Tokens::dark());
-        assert_eq!(l.grid_bg, d.grid_bg);
-        assert_eq!(l.sheet_ref_colors, d.sheet_ref_colors);
-        assert_eq!(
-            (l.sheet_control_bg, l.sheet_control_border, l.sheet_control_text, l.sheet_track),
-            (d.sheet_control_bg, d.sheet_control_border, d.sheet_control_text, d.sheet_track)
-        );
-        assert_eq!(
-            (l.sheet_macro_input, l.sheet_macro_footprint, l.sheet_macro_conflict, l.sheet_macro_target),
-            (d.sheet_macro_input, d.sheet_macro_footprint, d.sheet_macro_conflict, d.sheet_macro_target)
-        );
-        assert_eq!((l.sheet_trace_arrow, l.sheet_trace_error), (d.sheet_trace_arrow, d.sheet_trace_error));
-        for c in Cat::ALL {
-            assert_ne!(l.cat(c), d.cat(c), "{c:?} has a dark-mode value of its own");
+        let sheet_fields = |t: &Tokens| {
+            (
+                (t.grid_bg, t.gridline, t.cell_text, t.sel_border, t.sel_fill, t.active_row, t.error_check_green),
+                t.sheet_ref_colors,
+                (t.sheet_control_bg, t.sheet_control_border, t.sheet_control_text, t.sheet_track),
+                (t.sheet_macro_input, t.sheet_macro_footprint, t.sheet_macro_conflict, t.sheet_macro_target),
+                (t.sheet_py_tag, t.on_sheet_py_tag, t.sheet_trace_arrow, t.sheet_trace_error),
+            )
+        };
+        // Display theme alone never changes the sheet, in either sheet.
+        for dark_sheet in [false, true] {
+            assert_eq!(sheet_fields(&Tokens::palette(false, dark_sheet)), sheet_fields(&Tokens::palette(true, dark_sheet)));
         }
+        // The dark sheet alone never changes the chrome.
+        let (l, d) = (Tokens::palette(false, false), Tokens::palette(false, true));
+        assert_ne!(sheet_fields(&l), sheet_fields(&d));
+        assert_eq!(
+            (l.window, l.ribbon, l.text, l.header_bg, l.header_text, l.tab_bar, l.accent),
+            (d.window, d.ribbon, d.text, d.header_bg, d.header_text, d.tab_bar, d.accent)
+        );
+        for c in Cat::ALL {
+            assert_ne!(Tokens::light().cat(c), Tokens::dark().cat(c), "{c:?} has a dark-mode value of its own");
+        }
+    }
+
+    #[test]
+    fn light_sheet_is_unchanged_and_dark_sheet_is_the_design_note() {
+        let l = Tokens::light();
+        assert_eq!((l.grid_bg, l.gridline, l.cell_text, l.sel_border), (Color32::WHITE, rgb(0xE1E1E1), Color32::BLACK, rgb(0x107C41)));
+        assert!(!l.dark_sheet);
+        let d = Tokens::palette(false, true);
+        assert_eq!((d.grid_bg, d.gridline, d.cell_text, d.sel_border), (rgb(0x333333), rgb(0x4B4B4B), Color32::WHITE, rgb(0x5CC587)));
+        assert!(d.dark_sheet && !d.dark);
+        assert_eq!(l.with_dark_sheet(true), d);
+        assert_eq!(d.with_dark_sheet(false), l);
+    }
+
+    #[test]
+    fn dark_sheet_gridline_is_at_least_as_visible_as_the_light_one() {
+        let light = contrast(SheetColors::LIGHT.gridline, SheetColors::LIGHT.grid_bg);
+        let dark = contrast(SheetColors::DARK.gridline, SheetColors::DARK.grid_bg);
+        assert!(light > 1.3 && dark >= light, "light {light:.2}:1, dark {dark:.2}:1");
+    }
+
+    #[test]
+    fn tokens_get_reads_the_dark_sheet_flag_from_the_context() {
+        let ctx = egui::Context::default();
+        assert!(!dark_sheet(&ctx), "off until set");
+        assert_eq!(Tokens::get(&ctx).grid_bg, Color32::WHITE);
+        set_dark_sheet(&ctx, true);
+        let t = Tokens::get(&ctx);
+        assert!(t.dark_sheet);
+        assert_eq!(t.grid_bg, SheetColors::DARK.grid_bg);
+        set_dark_sheet(&ctx, false);
+        assert_eq!(Tokens::get(&ctx).grid_bg, Color32::WHITE);
     }
 }
 

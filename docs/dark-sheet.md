@@ -1,11 +1,11 @@
 # Dark sheet: design
 
-> **Last updated:** 2026-11-04 · **Change:** new (design for #1264; not built yet) · **Target:** a setting Excel does not have
+> **Last updated:** 2026-11-04 · **Change:** token layer built (DS2); rest not built yet · **Target:** a setting Excel does not have
 
 A dark sheet shows the cells, not only the interface around them, light-on-dark. It is asked
 for in #1264 (and its duplicate #1736); WordCraft has the same feature for pages
 (storytold/wordcraft#194). This note fixes the behaviour and the colour rules so the code can
-be written in small, separate changes. Until it lands, the sheet is white in both themes.
+be written in small, separate changes. Until it lands, the sheet is white in both themes. Built so far: the sheet colour tokens (DS2).
 
 ## What the user gets
 
@@ -175,3 +175,4 @@ held to WCAG 2 by `contrast_tests`.*
 | Date | Change | Notes |
 | --- | --- | --- |
 | 2026-11-04 | new | Design: opt-in dark sheet, WordCraft colour rule with a contrast guard, token layout, command id open |
+| 2026-11-04 | DS2 | `theme::SheetColors` (LIGHT/DARK), `Tokens::palette(dark_ui, dark_sheet)`, `theme::set_dark_sheet` / `dark_sheet` (context flag read by `Tokens::get`), `Tokens::with_dark_sheet`; `contrast_tests` runs all four combinations |
