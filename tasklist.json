@@ -217,16 +217,16 @@
     {
       "id": "gridcraft-DS9",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "haiku",
       "effort": "low",
       "short": "Docs: ui-parity.md, ROADMAP.md, observed-ui.md for dark sheet area",
-      "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected). Also docs/architecture.md (the 'sheet stays white' paragraph) and the doc comments in theme.rs and icons.rs. Design 04.11.2026 (DS1): the replacement wording for \"the sheet stays white\" is in docs/dark-sheet.md (Wording to replace); also link docs/dark-sheet.md from docs/ui-parity.md.",
+      "details": "Update docs/ui-parity.md (Display theme row), ROADMAP.md progress log, timestamps and revision history. ATTRIBUTION.md only if assets are added (none expected). Also docs/architecture.md (the 'sheet stays white' paragraph) and the doc comments in theme.rs and icons.rs. Design 04.11.2026 (DS1): the replacement wording for \"the sheet stays white\" is in docs/dark-sheet.md (Wording to replace); also link docs/dark-sheet.md from docs/ui-parity.md. Done 04.11.2026: ui-parity.md (Dark mode row, header, revision), ROADMAP.md (progress log, header, revision), architecture.md and dark-sheet.md (\"sheet stays white\" replaced, revision rows); icons.rs paint_on_sheet now takes the sheet palette (it was fixed light, so the doc change would have been wrong) and its doc comment and the icons.rs module doc match. Verified: cargo check -p gridcraft-ui-egui, cargo test -p gridcraft-ui-egui --lib theme (32 passed). Not touched: plan/excel/observed-ui.md, because plan/ is gitignored and absent from this checkout (local only).",
       "depends_on": [
         "gridcraft-DS8"
       ],
-      "done": null
+      "done": "2026-11-04T22:01:10"
     },
     {
       "id": "gridcraft-DS16",
@@ -289,11 +289,12 @@
     {
       "id": "gridcraft-H4",
       "section": "human",
-      "status": "todo",
+      "status": "done",
       "group": "Tooling",
       "short": "Install the wasm32 Rust target on this Windows machine so cargo xtask wasm can run",
       "details": "cargo xtask wasm (a quality gate of cargo xtask ci) fails here with E0463 can't find crate for core: the wasm32-unknown-unknown target is not installed (rustup target list --installed shows only x86_64-pc-windows-msvc). Found 04.11.2026 verifying gridcraft-DS4. Paste in a terminal: rustup target add wasm32-unknown-unknown (about 30 MB under the rustup home on C:). Then any session can run cargo xtask wasm before committing.",
-      "done": null
+      "answer": "done, installed",
+      "done": "2026-11-04T22:01:35"
     }
   ]
 }
