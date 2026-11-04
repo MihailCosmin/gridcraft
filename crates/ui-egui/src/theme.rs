@@ -132,6 +132,10 @@ pub struct Tokens {
     /// between cells showing an error. Sheet colours.
     pub sheet_trace_arrow: Color32,
     pub sheet_trace_error: Color32,
+    /// Frozen-pane lines, the fill-handle ring and the drag outlines. Sheet colours.
+    pub sheet_freeze_line: Color32,
+    pub sheet_handle_halo: Color32,
+    pub sheet_drag_outline: Color32,
 }
 
 /// The eight category colours, in the order of [`Tokens::cat`].
@@ -212,6 +216,12 @@ pub struct SheetColors {
     pub trace_error: Color32,
     /// The error-checking triangle in a cell's corner.
     pub error_check_green: Color32,
+    /// The frozen-pane lines across the cells.
+    pub freeze_line: Color32,
+    /// The ring round the fill handle: the sheet colour, so the handle stands off the cell edge.
+    pub handle_halo: Color32,
+    /// The dashed fill-drag preview and the move-drag outline.
+    pub drag_outline: Color32,
 }
 
 impl SheetColors {
@@ -238,6 +248,9 @@ impl SheetColors {
         trace_arrow: rgb(0x1F5FC9),
         trace_error: rgb(0xD13438),
         error_check_green: rgb(0x1E8E3E),
+        freeze_line: rgb(0x949494),
+        handle_halo: Color32::WHITE,
+        drag_outline: rgb(0x646464),
     };
 
     /// The dark sheet: WordCraft's paper grey `#333333`, light text, the same hues lifted.
@@ -262,6 +275,9 @@ impl SheetColors {
         trace_arrow: rgb(0x6FA3F5),
         trace_error: rgb(0xF1707A),
         error_check_green: rgb(0x4CC26B),
+        freeze_line: rgb(0x8A8A8A),
+        handle_halo: rgb(0x333333),
+        drag_outline: rgb(0xC8C8C8),
     };
 
     /// The set for a sheet: dark when the dark sheet is on.
@@ -382,6 +398,9 @@ impl Tokens {
             on_sheet_py_tag: sheet.on_py_tag,
             sheet_trace_arrow: sheet.trace_arrow,
             sheet_trace_error: sheet.trace_error,
+            sheet_freeze_line: sheet.freeze_line,
+            sheet_handle_halo: sheet.handle_halo,
+            sheet_drag_outline: sheet.drag_outline,
         }
     }
 
@@ -541,6 +560,9 @@ mod contrast_tests {
         }
         add("trace arrow on sheet", t.sheet_trace_arrow, t.grid_bg, GLYPH);
         add("trace error arrow on sheet", t.sheet_trace_error, t.grid_bg, GLYPH);
+        add("frozen-pane line on sheet", t.sheet_freeze_line, t.grid_bg, GLYPH);
+        add("drag outline on sheet", t.sheet_drag_outline, t.grid_bg, GLYPH);
+        add("fill-handle fill on its halo", t.sel_border, t.sheet_handle_halo, GLYPH);
         // The macro step editor: breakpoint dots in the gutter, error markers, the current step.
         add("breakpoint on window", t.breakpoint, t.window, GLYPH);
         add("breakpoint on current step", t.breakpoint, t.accent_soft, GLYPH);
@@ -605,6 +627,7 @@ mod contrast_tests {
                 (t.sheet_control_bg, t.sheet_control_border, t.sheet_control_text, t.sheet_track),
                 (t.sheet_macro_input, t.sheet_macro_footprint, t.sheet_macro_conflict, t.sheet_macro_target),
                 (t.sheet_py_tag, t.on_sheet_py_tag, t.sheet_trace_arrow, t.sheet_trace_error),
+                (t.sheet_freeze_line, t.sheet_handle_halo, t.sheet_drag_outline),
             )
         };
         // Display theme alone never changes the sheet, in either sheet.

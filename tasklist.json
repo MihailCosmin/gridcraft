@@ -63,17 +63,17 @@
     {
       "id": "gridcraft-DS3",
       "section": "main",
-      "status": "todo",
+      "status": "done",
       "group": "Dark sheet",
       "model": "sonnet",
       "effort": "high",
       "short": "Render grid backgrounds, lines and headers from tokens in dark mode",
-      "details": "crates/ui-egui/src/grid/quadrant.rs (Color32::WHITE at ~208), show.rs, geo.rs, cursor.rs (white/black halo: choose per mode), selection.rs, active_row.rs: replace hard-coded colours with Tokens. Gridlines toggle must still work. Check offscreen snapshot with --sample sales in dark mode. Dark values apply only while the DS15 setting is on; with it off the sheet stays as today.",
+      "details": "crates/ui-egui/src/grid/quadrant.rs (Color32::WHITE at ~208), show.rs, geo.rs, cursor.rs (white/black halo: choose per mode), selection.rs, active_row.rs: replace hard-coded colours with Tokens. Gridlines toggle must still work. Check offscreen snapshot with --sample sales in dark mode. Dark values apply only while the DS15 setting is on; with it off the sheet stays as today. Done 04.11.2026: the grid paints from the sheet tokens. New SheetColors fields freeze_line, handle_halo, drag_outline (Tokens sheet_freeze_line, sheet_handle_halo, sheet_drag_outline; light #949494/white/#646464, dark #8A8A8A/#333333/#C8C8C8, contrast tests added); quadrant.rs merged-cell backdrop uses grid_bg instead of WHITE; selection.rs fill-handle ring and fill-drag/move outlines, show.rs frozen-pane lines read the tokens; cursor.rs split cursor follows Display theme (it sits on the headers). Background, gridlines, selection and active-row already read Tokens (DS2) and now follow the dark sheet; the gridlines toggle still hides the lines. Headers stay on Display theme by the design note. examples/snapshot.rs got --dark-sheet (DS15 had noted it but it was missing); sales sample checked in dark: #333333 sheet, subtle gridlines. Test the_grid_paints_the_sheet_tokens_light_or_dark (pixels of an empty cell and its gridline: light, dark, gridlines off, back; skips without a GPU). Verified: ui-egui lib 294, it dark_sheet 6, it freeze/drag/select/fill_handle/active_row/page_layout/merged/theme 186 pass, clippy -D warnings, fmt, xtask layers clean. Not done here, by design: cell text, fills and borders (DS4), comment connector line, checkboxes, overlays (DS5) still use authored/hard-coded colours, so the sample shows black text on the dark sheet until DS4.",
       "depends_on": [
         "gridcraft-DS2",
         "gridcraft-DS15"
       ],
-      "done": null
+      "done": "2026-11-04T21:30:42"
     },
     {
       "id": "gridcraft-DS10",

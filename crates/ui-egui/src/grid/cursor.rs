@@ -123,14 +123,16 @@ fn header_edge_cursor(app: &SheetApp, ctx: &egui::Context, pointer: &egui::Point
 }
 
 /// A split cursor (two bars with arrows either side) painted in place of the OS cursor, which
-/// has no such shape. Black on a white outline, like the system cursors.
+/// has no such shape. Black on a white outline (white on black in a dark interface), like the system cursors.
 fn paint_split_cursor(ctx: &egui::Context, at: Pos2, cols: bool) {
     ctx.set_cursor_icon(CursorIcon::None);
     let p = ctx.layer_painter(egui::LayerId::new(egui::Order::Tooltip, egui::Id::unique("gridcraft.split_cursor")));
     // Drawn for columns (bars vertical); rows swap the axes.
     let pt = |x: f32, y: f32| if cols { pos2(at.x + x, at.y + y) } else { pos2(at.x + y, at.y + x) };
     let arrow = |dir: f32| vec![pt(dir * 10.0, 0.0), pt(dir * 6.0, -4.0), pt(dir * 6.0, 4.0)];
-    for (width, color) in [(3.0, Color32::WHITE), (1.0, Color32::BLACK)] {
+    // It sits on the headers, which follow Display theme: light on a dark interface.
+    let (halo, ink) = if crate::theme::Tokens::get(ctx).dark { (Color32::BLACK, Color32::WHITE) } else { (Color32::WHITE, Color32::BLACK) };
+    for (width, color) in [(3.0, halo), (1.0, ink)] {
         let stroke = Stroke::new(width, color);
         for bx in [-1.5, 1.5] {
             p.line_segment([pt(bx, -8.0), pt(bx, 8.0)], stroke);

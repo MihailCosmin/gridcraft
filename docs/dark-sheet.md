@@ -1,11 +1,11 @@
 # Dark sheet: design
 
-> **Last updated:** 2026-11-04 · **Change:** token layer built (DS2); rest not built yet · **Target:** a setting Excel does not have
+> **Last updated:** 2026-11-04 · **Change:** grid background, gridlines, selection and frozen lines paint from the tokens (DS3); cell colours not built yet · **Target:** a setting Excel does not have
 
 A dark sheet shows the cells, not only the interface around them, light-on-dark. It is asked
 for in #1264 (and its duplicate #1736); WordCraft has the same feature for pages
 (storytold/wordcraft#194). This note fixes the behaviour and the colour rules so the code can
-be written in small, separate changes. Until it lands, the sheet is white in both themes. Built so far: the sheet colour tokens (DS2).
+be written in small, separate changes. Until it lands, the sheet is white in both themes. Built so far: the sheet colour tokens (DS2), the setting (DS15) and the grid itself (DS3: background, gridlines, merged-cell backdrop, selection, fill handle, drag outlines, frozen-pane lines).
 
 ## What the user gets
 
@@ -91,7 +91,10 @@ each held to WCAG 2 against `#333333` (4.5:1 text, 3:1 glyphs) by `theme::contra
 | PY tag and its text | `#1E6E4E`, white | `#5CBF94`, `#0B1F17` |
 | Error-check triangle | `#1E8E3E` | `#4CC26B` |
 | In-cell editor: text, caret, background | black on white | white on the cell's mapped fill or the sheet |
-| Frozen-pane lines, automatic page breaks, copy marching ants, find highlight, spill outline | today's values | dark values chosen with the same contrast test |
+| Frozen-pane lines | `#949494` | `#8A8A8A` (3.7:1) |
+| Fill-handle ring | white | the sheet grey |
+| Fill-drag preview and move-drag outline | `#646464` | `#C8C8C8` (5.8:1) |
+| Automatic page breaks, copy marching ants (use the selection border), find highlight, spill outline | today's values | dark values chosen with the same contrast test |
 
 Row and column headers, the select-all corner and their selection highlight are interface: they
 follow Display theme, not the dark sheet.
@@ -176,3 +179,4 @@ held to WCAG 2 by `contrast_tests`.*
 | --- | --- | --- |
 | 2026-11-04 | new | Design: opt-in dark sheet, WordCraft colour rule with a contrast guard, token layout, command id open |
 | 2026-11-04 | DS2 | `theme::SheetColors` (LIGHT/DARK), `Tokens::palette(dark_ui, dark_sheet)`, `theme::set_dark_sheet` / `dark_sheet` (context flag read by `Tokens::get`), `Tokens::with_dark_sheet`; `contrast_tests` runs all four combinations |
+| 2026-11-04 | DS3 | `SheetColors` gains `freeze_line`, `handle_halo`, `drag_outline` (tokens `sheet_*`); the merged-cell backdrop, fill handle, drag outlines and frozen lines read tokens; split cursor follows Display theme; `snapshot --dark-sheet`; pixel test of background and gridlines |
