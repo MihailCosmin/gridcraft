@@ -874,8 +874,6 @@ mod trace_arrow_tests {
         let screen = Rect::from_min_size(pos2(0.0, 0.0), vec2(1200.0, 800.0));
         let geo = Geo::new(sh, screen, scroll);
         let ctx = egui::Context::default();
-        // egui starts dark, and Display theme Dark darkens the sheet: measure the light sheet.
-        ctx.set_theme(egui::Theme::Light);
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), ..Default::default() }, |ui| {
             let p = ui.painter().clone();
             paint_overlays(OverlayInput { app, ui, painter: &p, geo: &geo, workbook: &wb, sheet_index: si, sheet: sh, selection: &sel });

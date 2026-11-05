@@ -1,9 +1,9 @@
-//! Switching the Display theme (`view.theme`) over the control channel repaints the interface and
-//! the sheet at once, and the choice survives a restart.
+//! Switching the Display theme (`view.theme`) repaints the interface at once and leaves the sheet
+//! as the dark-sheet setting says; both go through the control channel and survive a restart.
 
 use egui::vec2;
 use gridcraft_engine::Session;
-use gridcraft_ui_egui::{SheetApp, UiState, control, theme::Tokens};
+use gridcraft_ui_egui::{SheetApp, UiState, control};
 use serde_json::{Value, json};
 
 fn harness() -> egui_kittest::Harness<'static, SheetApp> {
@@ -29,7 +29,7 @@ fn execute(h: &mut egui_kittest::Harness<'static, SheetApp>, command: &str, para
     response
 }
 
-/// The colour of a far-away empty cell (no selection, no text) and of the ribbon.
+/// The colour of a far-away empty cell (no selection, no text) and of the column header strip.
 fn sheet_and_chrome(h: &mut egui_kittest::Harness<'static, SheetApp>) -> Option<([u8; 3], [u8; 3])> {
     let image = h.render().ok()?;
     let sh = h.state().session.active()?.wb.active()?;
@@ -44,32 +44,40 @@ fn sheet_and_chrome(h: &mut egui_kittest::Harness<'static, SheetApp>) -> Option<
 }
 
 #[test]
-fn a_theme_switch_repaints_the_interface_and_the_sheet_at_once() {
+fn a_theme_switch_repaints_the_interface_at_once_and_the_sheet_follows_only_its_own_setting() {
     let mut h = harness();
     execute(&mut h, "view.theme", json!({"mode": "light"}));
     let Some((sheet_light, chrome_light)) = sheet_and_chrome(&mut h) else { return };
     assert_eq!(sheet_light, [255; 3]);
     execute(&mut h, "view.theme", json!({"mode": "dark"}));
     let (sheet, chrome_dark) = sheet_and_chrome(&mut h).unwrap();
-    assert_eq!(sheet, [0x33; 3], "Display theme Dark shows the dark sheet");
+    assert_eq!(sheet, [255; 3], "a dark interface keeps the light sheet");
     assert_ne!(chrome_dark, chrome_light, "the interface repainted on the same switch");
+
+    execute(&mut h, "view.darkSheet", json!({"on": true}));
+    assert_eq!(sheet_and_chrome(&mut h).unwrap().0, [0x33; 3]);
     execute(&mut h, "view.theme", json!({"mode": "light"}));
     let (sheet, chrome) = sheet_and_chrome(&mut h).unwrap();
-    assert_eq!((sheet, chrome), ([255; 3], chrome_light), "back to light, both together");
+    assert_eq!(sheet, [0x33; 3], "a light interface with the dark sheet on");
+    assert_eq!(chrome, chrome_light);
+    execute(&mut h, "view.theme", json!({"mode": "system"}));
+    execute(&mut h, "view.darkSheet", json!({"on": false}));
+    assert_eq!(sheet_and_chrome(&mut h).unwrap().0, [255; 3]);
 }
 
 #[test]
-fn the_dark_theme_is_saved_and_restored_with_its_dark_sheet() {
+fn both_settings_are_saved_together_and_restored() {
     let mut h = harness();
     execute(&mut h, "view.theme", json!({"mode": "dark"}));
+    execute(&mut h, "view.darkSheet", json!({"on": true}));
     let saved = serde_json::to_string(&h.state().ui).unwrap();
     let restored: UiState = serde_json::from_str(&saved).unwrap();
-    assert!(restored.dark && !restored.system_theme);
+    assert!(restored.dark && restored.dark_sheet && !restored.system_theme);
     let mut h2 = harness();
     h2.state_mut().ui = restored;
     h2.run_steps(3);
     assert!(h2.ctx.global_style().visuals.dark_mode);
-    assert!(Tokens::get(&h2.ctx).dark_sheet);
+    assert!(gridcraft_ui_egui::theme::dark_sheet(&h2.ctx));
     if let Some((sheet, _)) = sheet_and_chrome(&mut h2) {
         assert_eq!(sheet, [0x33; 3]);
     }
@@ -78,6 +86,7 @@ fn the_dark_theme_is_saved_and_restored_with_its_dark_sheet() {
 #[test]
 fn a_screenshot_request_after_a_switch_shows_the_new_appearance() {
     let mut h = harness();
+    execute(&mut h, "view.darkSheet", json!({"on": true}));
     execute(&mut h, "view.theme", json!({"mode": "dark"}));
     let (tx, rx) = std::sync::mpsc::channel();
     h.state_mut().control_rx = Some(rx);

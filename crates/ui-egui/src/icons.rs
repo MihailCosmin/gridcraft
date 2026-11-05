@@ -293,10 +293,10 @@ pub fn paint_accent(p: &Painter, rect: Rect, icon: Icon, c: Color32, accent: Opt
     paint_with(p, rect, icon, c, &Palette { accent, ..Palette::of(&Tokens::get(p.ctx())) });
 }
 
-/// Draws `icon` on the sheet: the palette takes the sheet's colours (dark with Display theme Dark)
-/// and the chrome light (icons carry no chrome colours).
+/// Draws `icon` on the sheet. The sheet follows the dark-sheet setting, not Display theme, so the
+/// palette takes the sheet from the context and the chrome light (icons carry no chrome colours).
 pub fn paint_on_sheet(p: &Painter, rect: Rect, icon: Icon, c: Color32) {
-    let sheet_dark = Tokens::get(p.ctx()).dark_sheet;
+    let sheet_dark = crate::theme::dark_sheet(p.ctx());
     paint_with(p, rect, icon, c, &Palette::of(&Tokens::palette(false, sheet_dark)));
 }
 
