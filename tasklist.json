@@ -233,8 +233,8 @@
       "section": "validation",
       "status": "todo",
       "group": "Dark sheet",
-      "model": "sonnet",
-      "effort": "medium",
+      "model": "opus",
+      "effort": "max",
       "short": "Open the #1264 PRs from the fork (opt-in view.darkSheet), split and formatted as upstream accepts",
       "details": "Upstream has no CONTRIBUTING or PR template; the rules are AGENTS.md plus what merged PRs show. Checklist: 1. Split: maintainers asked PR #177 to split; send small reviewable PRs, e.g. PR A = DS2/DS3/DS4/DS10/DS11 with the theme hook (canvas, grid, automatic ink, borders, sheet tokens), PR B = DS5 overlays and charts, PR C = DS12/DS14/DS6 page break preview, previews, print/export guarantees. Each PR branches from current upstream main, no conflicts. 2. Title: plain sentence naming the area and the behaviour, with the issue: 'Dark sheet: an opt-in setting shows the cells light-on-dark (#1264)'; no conventional-commit prefix, no internal task ids (DS*) in titles, commits or code. Body says 'Closes #1264' only on the last PR, 'Part of #1264' on the others. 3. Body (as merged PR #3268 and WordCraft #194): what the user gets and where to find it; design choices and why (opt-in view.darkSheet, off by default, separate from Display theme so the default look does not change for anyone, which the maintainers hold as their decision (PR #177); screen-only, Print Preview white, explicit colours mapped by the WordCraft rule); offer to make Display theme Dark switch it on if they want that default; relation to #1736 and #177; Testing section listing the new tests by file and what each proves, what was checked by eye, and what is NOT covered; a table of cargo xtask ci steps with results (fmt, clippy, tests, assets, layers, wasm), naming any failures that also fail on clean main; translations included. 4. Gates: cargo xtask ci (fmt, clippy -D warnings, tests, assets, layers, wasm) passes or each failure is shown to fail on main too; no unwrap/expect/panic/indexing on input-derived values; colours only via theme::Tokens; everything a command, reachable via control channel; programmatic call opens no dialog; no CI workflow edits; no Microsoft screenshots or assets; any new asset has an ATTRIBUTION.md row. 5. Docs in the same PR: docs/ui-parity.md row, ROADMAP.md progress log, docs/architecture.md 'sheet stays white' paragraph, timestamps and revision history; docs/control-protocol.md if a method is added. 6. Attach before/after snapshot PNGs made with GridCraft (snapshot example --dark) to the PR description, not to the repo. 7. Never include tasklist.json, claude_answers.md, plan/ or local config in the PR diff. Allow maintainer edits. Answer CodeRabbit review comments (it reviews every PR) and push fixes as new commits, no force-push. 8. Mention the sibling precedent storytold/wordcraft#194 (colour rule) and note the new command view.darkSheet (view.darkMode stays the interface switch) and invite a rename. Credits (H2: the user wants NO credit at all): add no contributors/people.toml entry in any #1264 PR, do not ask again, and end each PR description with one line asking the maintainers to leave @MihailCosmin out of contributors/contributors.json (About > Contributors); the repo has no opt-out of its own, so this is a request, not a guarantee.",
       "depends_on": [
@@ -338,6 +338,17 @@
       "short": "Dark sheet opt-in again: view.darkSheet back, Display theme leaves cells alone",
       "details": "Reverts the one-switch decision (H3, 04.11.2026) at the user's request on 05.11.2026, to the shape upstream maintainers are likely to accept: dark cells are opt-in, view.darkSheet (View > Switch Modes, File > Options), off by default, view.darkMode and Display theme leave the sheet alone. Restored from the pre-H3 tree of 41750bec; the View tab overflow (N1) is solved by putting Dark sheet and Animations on one row. Done 05.11.2026: ui-egui src, tests, docs (dark-sheet, decisions, control-protocol, architecture, ui-parity, ROADMAP) and DS16 text updated; tests dark_sheet_*, system_theme, ribbon_layout pass; snapshots checked by eye.",
       "done": "2026-11-05T12:51:57"
+    },
+    {
+      "id": "gridcraft-N5",
+      "section": "rework",
+      "status": "todo",
+      "group": "",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "craft-libs: split cargo build-dir local builds are offered a self-update that cannot work",
+      "details": "Symptom (05.11.2026): a local cargo build (target\\release\\gridcraft.exe) shows the update prompt \"GridCraft 0.16.1 is available\" and \"Update and restart\" fails with \"this copy of GridCraft isn't signed (the file is not signed), so it doesn't install updates\". Cause (verified): craft-update self_update::is_development_build / is_cargo_build_dir (craft-libs rev c5a1cbf, crates/update/src/self_update.rs:150-172) recognises a cargo target by .rustc_info.json or by .fingerprint+deps+build inside the profile dir. The user's global cargo config sets build.build-dir to D:/cargo-build/<hash>, so target\\ keeps only CACHEDIR.TAG and the final exe: both checks fail, the build counts as an installed copy and offers a self-update it cannot verify. Fix in storytold/craft-libs: also treat a dir that holds CACHEDIR.TAG and a profile dir (debug/release) as a development build, with a unit test using a split build-dir layout; then bump the craft-libs rev in Cargo.toml (all craft-libs crates share one rev). Workaround until then: run with CRAFT_VERSIONS_FILE=D:\\ClaudeData\\gridcraft\\dev\\versions.json (pins gridcraft to Nightly, so no update is offered; verified: no self-update warning in the log).",
+      "done": null
     }
   ]
 }
