@@ -375,13 +375,13 @@
     {
       "id": "gridcraft-N8",
       "section": "validation",
-      "status": "todo",
+      "status": "done",
       "group": "",
       "model": "opus",
       "effort": "high",
       "short": "Dark sheet PR: answer CodeRabbit and maintainer reviews, push fixes as new commits",
-      "details": "Continues gridcraft-DS16. The upstream PR from MihailCosmin:dark-sheet-opt-in (worktree D:\\ClaudeData\\worktrees\\gridcraft-DS16, build dir under D:\\cargo-build) is open. Read CodeRabbit's review and any maintainer comments, verify each finding against the code, fix in the worktree, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (no force-push), reply on each thread. If the maintainers ask for three PRs, split the four commits (sheet, charts, pictures, docs). Remove the worktree and its build dir when the PR is merged or closed.",
-      "done": null
+      "details": "Continues gridcraft-DS16. The upstream PR from MihailCosmin:dark-sheet-opt-in (worktree D:\\ClaudeData\\worktrees\\gridcraft-DS16, build dir under D:\\cargo-build) is open. Read CodeRabbit's review and any maintainer comments, verify each finding against the code, fix in the worktree, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (no force-push), reply on each thread. If the maintainers ask for three PRs, split the four commits (sheet, charts, pictures, docs). Remove the worktree and its build dir when the PR is merged or closed. Done 05.11.2026: CodeRabbit review 5785232215 had 2 findings. (1) cell_paint.rs pattern fills: valid, the guard measured text against ink(authored blend) instead of the painted blend of the mapped colours; fixed in 44c8c0dc (theme::ink_guarded_on, Look::behind, regression test pattern_fill_text_is_guarded_against_the_blend_actually_painted, doc comments on the guard helpers for the docstring check). (2) editor.rs black editor text on a black fill on the light sheet: same as upstream main (text t.cell_text, ink_on only for the caret), left unchanged to keep the light sheet identical, pointed to #3074. Replied on both threads. Verified: fmt, clippy -p gridcraft-ui-egui -D warnings, ui-egui lib 314 pass, it 1180 pass / 2 known missing-glyph failures. Left: see gridcraft-N11.",
+      "done": "2026-11-05T16:08:26"
     },
     {
       "id": "gridcraft-N9",
@@ -403,6 +403,17 @@
       "effort": "medium",
       "short": "Bring the dark-sheet fixes from the PR branch back to the fork's main",
       "details": "The PR branch dark-sheet-opt-in (from upstream main 1fb19157) differs from the fork's main: it keeps the light sheet exactly as upstream (freeze line gray 150, drag outlines gray 90/110, dark-interface tints), drops the split-cursor and Format Cells changes, adds dark values for the form-control tokens, fixes the guard in the border preview and the table/cell style galleries (they passed mapped colours as the authored background, so the Normal style's text was invisible on the dark sheet), and adds Tokens::on_sheet/on_sheet_over. Merge upstream main into the fork's main (or reset the dark-sheet files to the PR branch's versions) keeping the N2/N3/H5 fixes, run fmt, clippy and ui-egui tests, push.",
+      "done": null
+    },
+    {
+      "id": "gridcraft-N11",
+      "section": "validation",
+      "status": "todo",
+      "group": "",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Dark sheet PR #3431: follow up on new reviews (CodeRabbit re-review, maintainers)",
+      "details": "Continues gridcraft-N8. CodeRabbit's first review (2 findings) is answered and fixed in 44c8c0dc; it may re-review that commit, and no maintainer has reviewed yet. Read new comments, verify each against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (no force-push), reply on each thread.",
       "done": null
     }
   ]
