@@ -131,6 +131,10 @@ colour rule (white becomes `#333333`, text stays legible), on a light or a dark 
 toggles; `value` is an alias; it returns `{on}`. Off by default, screen only (print, PDF and export keep
 the chart as authored), kept between runs.
 
+`{command: "view.darkPictures", params: {on: true}}` does the same for floating and in-cell pictures: each
+picture is decoded again with every pixel mapped by the dark-sheet colour rule. Same parameters and result,
+off by default, screen only, kept between runs; the file keeps the original picture.
+
 `{command: "view.animations", params: {on: false}}` turns motion in the UI off (the selection
 outline then jumps to a new selection instead of gliding there); without `on` it toggles. It is
 the View ▸ Animations checkbox, saved with the other UI preferences and on by default.

@@ -360,6 +360,17 @@
       "short": "Dark charts checkbox: charts drawn dark on their own setting (view.darkCharts)",
       "details": "Own opt-in setting for charts, requested by the user 05.11.2026: view.darkCharts {on?|value?} (View > Switch Modes checkbox \"Dark charts\", File > Options > General), off by default, independent of the dark sheet and Display theme. chartview::paint_prims_dark maps primitive colours with theme::ink and text with ink_guarded (4.5:1); sheet charts and the Recommended Charts preview follow it; sparklines, print, PDF and export unchanged; pictures are not inverted (photos). Done 05.11.2026: UiState.dark_charts, theme::set_dark_charts/dark_charts, command, control listing, snapshot --dark-charts, tests/it/dark_charts_setting.rs (5 tests), docs (dark-sheet, control-protocol, ui-parity); ui-egui tests, fmt, clippy pass; snapshots checked on a light and a dark sheet. Not done: a separate switch for pictures, translations of the label.",
       "done": "2026-11-05T13:20:03"
+    },
+    {
+      "id": "gridcraft-N7",
+      "section": "main",
+      "status": "done",
+      "group": "",
+      "model": "opus",
+      "effort": "high",
+      "short": "Dark pictures checkbox: pictures drawn inverted on their own setting (view.darkPictures)",
+      "details": "Requested by the user 05.11.2026, named like Word/Excel (\"Pictures\") since WordCraft has no picture setting: view.darkPictures {on?|value?}, checkbox \"Dark pictures\" in View > Switch Modes and File > Options > General, off by default, independent of the dark sheet and dark charts. floating_pictures (Key.dark, separate cache entry) and cell_pictures (Entry.dark, decoded again on a switch) map every pixel with theme::ink_image; file, print, PDF and export unchanged. The three dark checkboxes now stack in a column of their own beside Display theme/Animations, which keeps the View tab from overflowing sideways at 1440 px. Done 05.11.2026: UiState.dark_pictures, theme::set_dark_pictures/dark_pictures/ink_image, command, control listing, snapshot --dark-pictures, tests (cell_pictures re-decode, theme ink_image and flag, it dark_charts_setting dark_pictures test), docs (dark-sheet, control-protocol, ui-parity); ui-egui tests (1160 it + 301 lib), fmt, clippy pass; snapshots with a floating and an in-cell picture checked. Not done: translations of the new labels.",
+      "done": "2026-11-05T13:31:45"
     }
   ]
 }
