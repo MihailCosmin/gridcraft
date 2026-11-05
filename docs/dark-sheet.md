@@ -67,7 +67,7 @@ Results are cached per (ink, background) pair, so large sheets pay nothing per f
 | Borders, diagonal borders; automatic border colour | ink() (automatic = black, so white); guard against the cell's fill at 3:1 |
 | Conditional formats: fonts, fills, colour scales, data bars | ink(); fonts then the guard |
 | Table styles and cell styles (resolved to colours first) | ink() |
-| Charts: chart area, plot area, axes, gridlines, text, series | ink(); picture fills untouched |
+| Charts: chart area, plot area, axes, gridlines, text, series | ink(); picture fills untouched. Its own setting, `view.darkCharts` (View › Switch Modes, File › Options › General), off by default and independent of the dark sheet: `chartview::paint_prims_dark` maps every primitive's colour with `theme::ink`, and text with `ink_guarded` against white (4.5:1). Print, PDF and export are unchanged. Pictures are never inverted |
 | Shapes, text boxes, equations, comments' and notes' text and fill, Draw ink | ink() |
 | Sparklines | ink() |
 | Pictures (cell pictures, floating pictures, picture fills, icon-set glyphs) | as authored |

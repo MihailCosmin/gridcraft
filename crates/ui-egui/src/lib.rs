@@ -103,6 +103,10 @@ pub struct UiState {
     /// Dark sheet (View ▸ Switch Modes, File ▸ Options ▸ General): the cells are shown with their
     /// colours inverted. Screen only; nothing goes into the file. Off by default.
     pub dark_sheet: bool,
+    /// Dark charts (View ▸ Switch Modes, File ▸ Options ▸ General): charts are drawn with their
+    /// colours inverted, on a light or a dark sheet. Screen only; printing, PDFs and exports keep
+    /// the chart as authored. Off by default.
+    pub dark_charts: bool,
     /// AutoSave (the title-bar switch): save saved-to-file .xlsx workbooks shortly after every
     /// change. A preference like the rest of this struct — it stays on across restarts (#1901).
     pub autosave: bool,
@@ -156,6 +160,7 @@ impl Default for UiState {
             autocomplete: true,
             highlight_active_row: false,
             dark_sheet: false,
+            dark_charts: false,
             autosave: false,
             recent: vec![],
             keytip_invoke: None,

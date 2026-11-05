@@ -127,6 +127,12 @@ pub(super) fn view(app: &mut SheetApp, ui: &mut Ui) {
                 act(app, "view.darkSheet", json!({"on": dark_sheet}));
             }
             ui.add_space(6.0);
+            let mut dark_charts = app.ui.dark_charts;
+            let hint = lang.tr("Show charts with their colours inverted. Saving, printing and PDFs are unchanged.");
+            if ui.checkbox(&mut dark_charts, lang.tr("Dark charts")).on_hover_text(hint).changed() {
+                act(app, "view.darkCharts", json!({"on": dark_charts}));
+            }
+            ui.add_space(6.0);
             let mut animations = app.ui.animations;
             let hint = lang.tr("Glide the selection outline to the cell you move to instead of jumping there");
             if ui.checkbox(&mut animations, lang.tr("Animations")).on_hover_text(hint).changed() {

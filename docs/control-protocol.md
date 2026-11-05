@@ -126,6 +126,11 @@ The saved choice remains System; new users still start in Light. The legacy
 `value` is accepted as an alias) and returns `{on}`. It is separate from the display theme, off by
 default, screen only (Print Preview, saving and PDFs stay unchanged) and kept between runs.
 
+`{command: "view.darkCharts", params: {on: true}}` turns on dark charts: charts are drawn with the dark-sheet
+colour rule (white becomes `#333333`, text stays legible), on a light or a dark sheet. No parameter
+toggles; `value` is an alias; it returns `{on}`. Off by default, screen only (print, PDF and export keep
+the chart as authored), kept between runs.
+
 `{command: "view.animations", params: {on: false}}` turns motion in the UI off (the selection
 outline then jumps to a new selection instead of gliding there); without `on` it toggles. It is
 the View ▸ Animations checkbox, saved with the other UI preferences and on by default.

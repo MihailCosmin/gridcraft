@@ -349,6 +349,17 @@
       "short": "craft-libs: split cargo build-dir local builds are offered a self-update that cannot work",
       "details": "Symptom (05.11.2026): a local cargo build (target\\release\\gridcraft.exe) shows the update prompt \"GridCraft 0.16.1 is available\" and \"Update and restart\" fails with \"this copy of GridCraft isn't signed (the file is not signed), so it doesn't install updates\". Cause (verified): craft-update self_update::is_development_build / is_cargo_build_dir (craft-libs rev c5a1cbf, crates/update/src/self_update.rs:150-172) recognises a cargo target by .rustc_info.json or by .fingerprint+deps+build inside the profile dir. The user's global cargo config sets build.build-dir to D:/cargo-build/<hash>, so target\\ keeps only CACHEDIR.TAG and the final exe: both checks fail, the build counts as an installed copy and offers a self-update it cannot verify. Fix in storytold/craft-libs: also treat a dir that holds CACHEDIR.TAG and a profile dir (debug/release) as a development build, with a unit test using a split build-dir layout; then bump the craft-libs rev in Cargo.toml (all craft-libs crates share one rev). Workaround until then: run with CRAFT_VERSIONS_FILE=D:\\ClaudeData\\gridcraft\\dev\\versions.json (pins gridcraft to Nightly, so no update is offered; verified: no self-update warning in the log).",
       "done": null
+    },
+    {
+      "id": "gridcraft-N6",
+      "section": "main",
+      "status": "done",
+      "group": "",
+      "model": "opus",
+      "effort": "high",
+      "short": "Dark charts checkbox: charts drawn dark on their own setting (view.darkCharts)",
+      "details": "Own opt-in setting for charts, requested by the user 05.11.2026: view.darkCharts {on?|value?} (View > Switch Modes checkbox \"Dark charts\", File > Options > General), off by default, independent of the dark sheet and Display theme. chartview::paint_prims_dark maps primitive colours with theme::ink and text with ink_guarded (4.5:1); sheet charts and the Recommended Charts preview follow it; sparklines, print, PDF and export unchanged; pictures are not inverted (photos). Done 05.11.2026: UiState.dark_charts, theme::set_dark_charts/dark_charts, command, control listing, snapshot --dark-charts, tests/it/dark_charts_setting.rs (5 tests), docs (dark-sheet, control-protocol, ui-parity); ui-egui tests, fmt, clippy pass; snapshots checked on a light and a dark sheet. Not done: a separate switch for pictures, translations of the label.",
+      "done": "2026-11-05T13:20:03"
     }
   ]
 }
