@@ -408,12 +408,23 @@
     {
       "id": "gridcraft-N11",
       "section": "validation",
-      "status": "todo",
+      "status": "done",
       "group": "",
       "model": "sonnet",
       "effort": "medium",
       "short": "Dark sheet PR #3431: follow up on new reviews (CodeRabbit re-review, maintainers)",
-      "details": "Continues gridcraft-N8. CodeRabbit's first review (2 findings) is answered and fixed in 44c8c0dc; it may re-review that commit, and no maintainer has reviewed yet. Read new comments, verify each against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (no force-push), reply on each thread.",
+      "details": "Continues gridcraft-N8. CodeRabbit's first review (2 findings) is answered and fixed in 44c8c0dc; it may re-review that commit, and no maintainer has reviewed yet. Read new comments, verify each against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (no force-push), reply on each thread. Done 08.11.2026: review 5816272694 by eliets2 (automated first-pass). PR was CONFLICTING: merged upstream main into the branch (fcc412d7, ROADMAP log conflict only). Fixed in 699afd77: the Options page now shows a visible explanation under the three checkboxes (not only hover tooltips); new floating_pictures test for the dark texture beside the light one (coexistence, byte accounting, reuse, release on close); new theme test proving ink authored on white is guarded against the painted dark grey. Answered as not needed: chart text and border preview guards (ink_guarded already measures against ink(white) = the painted #333333), pixel assertions (covered by ink_image_maps_every_pixel_and_keeps_alpha), two truncated notes. Reply: issuecomment-6717740806. Verified: fmt, clippy -D warnings (model, ui-egui), xtask wasm pass; ui-egui lib 316 pass, it 1194 pass / 2 known missing-glyph failures; PR mergeable. Left: see gridcraft-N12.",
+      "done": "2026-11-08T07:29:27"
+    },
+    {
+      "id": "gridcraft-N12",
+      "section": "validation",
+      "status": "todo",
+      "group": "",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Dark sheet PR #3431: follow up on further reviews after the eliets2 round",
+      "details": "Continues gridcraft-N11. eliets2's review (5816272694) is answered in issuecomment-6717740806 and its valid points fixed in 699afd77 (branch merged with upstream main in fcc412d7). Watch for replies from eliets2, CodeRabbit's re-review of 699afd77 and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts, no force-push), reply.",
       "done": null
     }
   ]
