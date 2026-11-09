@@ -419,12 +419,34 @@
     {
       "id": "gridcraft-N12",
       "section": "validation",
-      "status": "todo",
+      "status": "done",
       "group": "",
       "model": "sonnet",
       "effort": "medium",
       "short": "Dark sheet PR #3431: follow up on further reviews after the eliets2 round",
-      "details": "Continues gridcraft-N11. eliets2's review (5816272694) is answered in issuecomment-6717740806 and its valid points fixed in 699afd77 (branch merged with upstream main in fcc412d7). Watch for replies from eliets2, CodeRabbit's re-review of 699afd77 and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts, no force-push), reply.",
+      "details": "Continues gridcraft-N11. eliets2's review (5816272694) is answered in issuecomment-6717740806 and its valid points fixed in 699afd77 (branch merged with upstream main in fcc412d7). Watch for replies from eliets2, CodeRabbit's re-review of 699afd77 and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts, no force-push), reply. Done 09.11.2026: PR was CONFLICTING again after upstream e9addf52 (#947, Arabic bidi): merged upstream main into the branch in 0cdd2c4a, one conflict in crates/ui-egui/src/grid/quadrant.rs, kept both the dark-sheet number-format colour (text_ink) and the new cell reading direction; no new review comments were handled. Verified on the merged tree: fmt, clippy -D warnings (model, ui-egui), xtask layers, assets and wasm pass; ui-egui tests all pass except 3: the 2 known missing-glyph failures and arabic_editing caret_after_typing_arabic_is_drawn_at_its_left_end, which fails identically on clean upstream main e9addf52 (gridcraft-N14). GitHub reports the PR MERGEABLE at 0cdd2c4a. Left: see gridcraft-N13.",
+      "done": "2026-11-09T20:35:49"
+    },
+    {
+      "id": "gridcraft-N13",
+      "section": "rework",
+      "status": "todo",
+      "group": "",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Answer new reviews on PR #3431; merge upstream main again if it goes conflicting",
+      "details": "Continues gridcraft-N12. The branch was merged with upstream main in 0cdd2c4a (e9addf52). Watch for replies from eliets2, CodeRabbit re-reviews and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts, no force-push), reply. The two workflows awaiting approval need a maintainer.",
+      "done": null
+    },
+    {
+      "id": "gridcraft-N14",
+      "section": "rework",
+      "status": "todo",
+      "group": "",
+      "model": "sonnet",
+      "effort": "medium",
+      "short": "Find why arabic_editing caret test fails on upstream main without craft-fonts",
+      "details": "tests/arabic_editing.rs caret_after_typing_arabic_is_drawn_at_its_left_end fails on clean upstream main e9addf52 on this Windows machine with CRAFT_FONTS_DIR unset: 'caret at x=13, text spans 0..31.9'; identical on the dark-sheet branch, so not caused by PR #3431. Cause not established (probably the fonts available without craft-fonts). If so, skip it like gridcraft-N2 did for the missing-glyph tests, or report it upstream.",
       "done": null
     }
   ]
