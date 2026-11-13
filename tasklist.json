@@ -459,6 +459,17 @@
       "short": "Answer new reviews on PR #3431; merge upstream main again if it goes conflicting",
       "details": "Continues gridcraft-N13. Branch merged with upstream main ec12eba8 in 5d3d4dbb; doc comments for CodeRabbit's docstring check in 8ce26d6d. Watch for CodeRabbit's re-review (does the docstring check now pass?), eliets2 and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts: keep both sides' doc header entries and revision rows; no force-push), reply. The workflows awaiting approval need a maintainer.",
       "done": null
+    },
+    {
+      "id": "gridcraft-N16",
+      "section": "rework",
+      "status": "done",
+      "group": "",
+      "model": "sonnet",
+      "effort": "low",
+      "short": "PR #3431 conflict in chartview.rs resolved (merge 81f6fd71)",
+      "details": "Upstream main cached chart_prims/Arc<Workbook> conflicted with dark charts in chartview.rs; merged, cargo check + dark tests pass, pushed to fork/dark-sheet-opt-in, GitHub shows MERGEABLE.",
+      "done": "2026-11-13T15:44:21"
     }
   ]
 }
