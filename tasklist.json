@@ -340,17 +340,6 @@
       "done": "2026-11-05T12:51:57"
     },
     {
-      "id": "gridcraft-N5",
-      "section": "rework",
-      "status": "todo",
-      "group": "",
-      "model": "sonnet",
-      "effort": "medium",
-      "short": "craft-libs: split cargo build-dir local builds are offered a self-update that cannot work",
-      "details": "Symptom (05.11.2026): a local cargo build (target\\release\\gridcraft.exe) shows the update prompt \"GridCraft 0.16.1 is available\" and \"Update and restart\" fails with \"this copy of GridCraft isn't signed (the file is not signed), so it doesn't install updates\". Cause (verified): craft-update self_update::is_development_build / is_cargo_build_dir (craft-libs rev c5a1cbf, crates/update/src/self_update.rs:150-172) recognises a cargo target by .rustc_info.json or by .fingerprint+deps+build inside the profile dir. The user's global cargo config sets build.build-dir to D:/cargo-build/<hash>, so target\\ keeps only CACHEDIR.TAG and the final exe: both checks fail, the build counts as an installed copy and offers a self-update it cannot verify. Fix in storytold/craft-libs: also treat a dir that holds CACHEDIR.TAG and a profile dir (debug/release) as a development build, with a unit test using a split build-dir layout; then bump the craft-libs rev in Cargo.toml (all craft-libs crates share one rev). Workaround until then: run with CRAFT_VERSIONS_FILE=D:\\ClaudeData\\gridcraft\\dev\\versions.json (pins gridcraft to Nightly, so no update is offered; verified: no self-update warning in the log).",
-      "done": null
-    },
-    {
       "id": "gridcraft-N6",
       "section": "main",
       "status": "done",
@@ -437,17 +426,6 @@
       "short": "Answer new reviews on PR #3431; merge upstream main again if it goes conflicting",
       "details": "Continues gridcraft-N12. The branch was merged with upstream main in 0cdd2c4a (e9addf52). Watch for replies from eliets2, CodeRabbit re-reviews and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts, no force-push), reply. The two workflows awaiting approval need a maintainer. Done 10.11.2026: PR was CONFLICTING again after upstream ca39b5ab and ec12eba8 (#417, #3081): merged upstream main in 5d3d4dbb, conflicts in ROADMAP.md, docs/architecture.md, docs/ui-parity.md (Last updated headers and revision rows: both sides kept, newest date) and crates/ui-egui/src/grid/quadrant.rs (imports: painted_fill and galley_baseline_bounds). CodeRabbit review 5830853762 on 0cdd2c4a had no inline findings, only a failed docstring-coverage check (54.24%, 80% wanted): 38 doc comments added in 8ce26d6d (painting helpers, Tokens::get, dialog and gallery functions, test harnesses, branching tests). No open review threads. Verified: fmt, clippy -D warnings (model, ui-egui, examples), xtask layers, assets and wasm pass; ui-egui tests 1196 + 328 pass, 4 fail, all also failing on clean upstream main ec12eba8: the 2 known missing-glyph tests, arabic_editing caret_after_typing_arabic_is_drawn_at_its_left_end and cjk_baseline same_row_cells_keep_their_baseline_with_baseline_aligned_fallbacks (gridcraft-N14). GitHub reports the PR MERGEABLE at 8ce26d6d. Left: see gridcraft-N15.",
       "done": "2026-11-10T15:05:20"
-    },
-    {
-      "id": "gridcraft-N14",
-      "section": "rework",
-      "status": "todo",
-      "group": "",
-      "model": "sonnet",
-      "effort": "medium",
-      "short": "Find why the Arabic caret and CJK same-row baseline tests fail on upstream main here",
-      "details": "tests/arabic_editing.rs caret_after_typing_arabic_is_drawn_at_its_left_end fails on clean upstream main e9addf52 on this Windows machine with CRAFT_FONTS_DIR unset: 'caret at x=13, text spans 0..31.9'; identical on the dark-sheet branch, so not caused by PR #3431. Cause not established (probably the fonts available without craft-fonts). If so, skip it like gridcraft-N2 did for the missing-glyph tests, or report it upstream. Added 10.11.2026: tests/cjk_baseline.rs same_row_cells_keep_their_baseline_with_baseline_aligned_fallbacks (from upstream ec12eba8, #3081) also fails on clean upstream main ec12eba8 here, at line 178 expect(\"cell text is painted\") (a CJK face is present, so the test is not skipped); identical on the PR branch.",
-      "done": null
     },
     {
       "id": "gridcraft-N15",
