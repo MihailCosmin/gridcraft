@@ -125,7 +125,8 @@ pub(super) fn view(app: &mut SheetApp, ui: &mut Ui) {
             act(app, "view.animations", json!({"on": animations}));
         }
     });
-    // The three screen-only dark settings, stacked so the tab stays narrow.
+    // Screen-only dark settings, off by default and separate from Display theme, stacked in a
+    // column of their own so the tab stays narrow.
     ui.vertical(|ui| {
         ui.spacing_mut().item_spacing.y = 2.0;
         let mut dark_sheet = app.ui.dark_sheet;

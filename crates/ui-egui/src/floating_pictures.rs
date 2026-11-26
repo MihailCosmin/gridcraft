@@ -181,6 +181,7 @@ mod tests {
         bytes.into_inner()
     }
 
+    /// The cache key of a light picture with this document, id and data.
     fn key(doc: u64, id: u32, data: &[u8]) -> Key {
         Key { doc, id, len: data.len(), dark: false }
     }
@@ -191,6 +192,7 @@ mod tests {
         out.textures_delta.clear(); // nothing consumes the uploads in a headless test
     }
 
+    /// A picture is decoded at about the size it is drawn, not at its full source size.
     #[test]
     fn pictures_are_decoded_at_about_the_size_drawn() {
         let ctx = egui::Context::default();
@@ -213,6 +215,27 @@ mod tests {
         let tiny = png(40, 20, [0, 0, 0, 255]);
         assert_eq!(cache.texture(&ctx, key(1, 2, &tiny), &tiny, 4000).unwrap().size(), [40, 20]);
         assert_eq!(cache.entries.get(&key(1, 2, &tiny)).map(|e| e.side), Some(u32::MAX), "the whole picture: never decoded again");
+    }
+
+    #[test]
+    fn the_dark_texture_is_an_entry_of_its_own_beside_the_light_one() {
+        let ctx = egui::Context::default();
+        let mut cache = Cache::default();
+        let data = png(64, 32, [255, 255, 255, 128]);
+        let light = key(1, 1, &data);
+        let dark = Key { dark: true, ..light };
+        let light_tex = cache.texture(&ctx, light, &data, 64).unwrap().id();
+        let dark_tex = cache.texture(&ctx, dark, &data, 64).unwrap().id();
+        assert_ne!(dark_tex, light_tex, "the dark-pictures setting decodes a texture of its own");
+        assert_eq!(cache.entries.len(), 2, "both kept, so switching back and forth decodes nothing");
+        assert_eq!(cache.bytes, 2 * 64 * 32 * 4, "both counted against the budget");
+        frame(&ctx);
+        assert_eq!(cache.texture(&ctx, light, &data, 64).unwrap().id(), light_tex);
+        assert_eq!(cache.texture(&ctx, dark, &data, 64).unwrap().id(), dark_tex);
+        // A closed workbook gives both back.
+        cache.forget_closed(&[2]);
+        assert!(cache.entries.is_empty());
+        assert_eq!(cache.bytes, 0);
     }
 
     #[test]

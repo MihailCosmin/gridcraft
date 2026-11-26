@@ -27,46 +27,67 @@ pub(super) fn table_gallery(app: &mut SheetApp, ui: &mut Ui, cmd: &str) {
     }
 }
 
+/// A style's gallery thumbnail: a 5x5 table (header row, banded rows) painted cell by cell from
+/// the same look the grid uses.
+/// A style's gallery thumbnail: a 5x5 table (header row, banded rows) painted cell by cell from
+/// the same look the grid uses; the authored colours are mapped and guarded for the dark sheet
+/// like the cells they preview.
 pub(super) fn paint_table_swatch(ui: &Ui, r: Rect, wb: &gridcraft_engine::model::Workbook, style: &str) {
-    let lk = gridcraft_engine::tables::look(style);
+    use egui::emath::GuiRounding;
+    use gridcraft_engine::tables::{TableParts, cell_look, look};
+    let lk = look(style);
+    let parts = TableParts { header_row: true, totals_row: false, banded_rows: true, banded_cols: false, first_col: false, last_col: false };
     let t = Tokens::get(ui.ctx());
-    // Fills are mapped by the dark-sheet colour rule; text is held legible on the sheet.
-    let res = |c: Option<gridcraft_engine::model::Color>| {
-        c.and_then(|c| c.resolve(&wb.theme)).map(theme::color32).map(|c| if t.dark_sheet { theme::ink(c) } else { c })
-    };
+    // Authored colours; painted through `t.on_sheet` (fills) and `t.on_sheet_over` (text, lines).
+    let res = |c: gridcraft_engine::model::Color| c.resolve(&wb.theme).map(theme::color32);
     let p = ui.painter();
     p.rect_filled(r, 0.0, t.grid_bg);
-    let rows = 5;
-    let rh = r.height() / rows as f32;
-    for i in 0..rows {
-        let rr = Rect::from_min_size(pos2(r.left(), r.top() + i as f32 * rh), vec2(r.width(), rh));
-        let fill = if i == 0 {
-            res(lk.header_fill)
-        } else if i % 2 == 1 {
-            res(lk.band_fill)
-        } else {
-            res(lk.body_fill)
-        };
-        if let Some(f) = fill {
-            p.rect_filled(rr, 0.0, f);
-        }
-        if let Some(l) = res(lk.line) {
-            p.line_segment([rr.left_bottom(), rr.right_bottom()], Stroke::new(1.0, l));
-        }
-        for k in 0..3 {
-            let x = rr.left() + 4.0 + k as f32 * (r.width() - 8.0) / 3.0;
-            let col = if i == 0 {
-                let c = res(Some(lk.header_font)).unwrap_or(t.cell_text);
-                if t.dark_sheet { theme::ink_guarded(c, fill.unwrap_or(t.grid_bg), theme::INK_TEXT_MIN) } else { c }
-            } else {
-                t.sheet_control_border
-            };
-            p.line_segment([pos2(x, rr.center().y), pos2(x + 10.0, rr.center().y)], Stroke::new(1.0, col));
+    let line = |l: gridcraft_engine::model::BorderLine, paper: Color32| {
+        if l.is_none() { None } else { Some(res(l.color).map_or(t.cell_text, |c| t.on_sheet_over(c, paper, theme::INK_LINE_MIN))) }
+    };
+    let n = 5u32;
+    let (cw, rh) = (r.width() / n as f32, r.height() / n as f32);
+    // Cell edges on whole pixels keep the lines crisp and the rows evenly spaced.
+    let ppp = ui.pixels_per_point();
+    let at = |start: f32, size: f32, k: u32| (start + size * k as f32).round_to_pixels(ppp);
+    for row in 0..n {
+        for col in 0..n {
+            let (x0, x1) = (at(r.left(), cw, col), at(r.left(), cw, col + 1));
+            let cr = Rect::from_min_max(pos2(x0, at(r.top(), rh, row)), pos2(x1, at(r.top(), rh, row + 1)));
+            let cl = cell_look(&lk, parts, row, col, n, n);
+            let fill = cl.fill.and_then(res).map(|f| t.on_sheet(f));
+            if let Some(f) = fill {
+                p.rect_filled(cr, 0.0, f);
+            }
+            let paper = fill.unwrap_or(t.grid_bg);
+            let b = cl.borders;
+            // Excel centres the dash in the space inside the cell's own lines, across about half of it.
+            let inset = |l: gridcraft_engine::model::BorderLine| if l.is_none() { 0.0 } else { 1.0 };
+            let inner = Rect::from_min_max(
+                pos2(cr.left() + inset(b.left), cr.top() + inset(b.top)),
+                pos2(cr.right() - inset(b.right), cr.bottom() - inset(b.bottom)),
+            );
+            // When the gap can't split evenly, Excel puts the spare pixel below the dash.
+            let top = ((inner.center().y - 0.5) * ppp).floor() / ppp;
+            let (mid, half) = (inner.center().x, cw * 0.26);
+            let dash = Rect::from_min_max(pos2((mid - half).round_to_pixels(ppp), top), pos2((mid + half).round_to_pixels(ppp), top + 1.0));
+            p.rect_filled(dash, 0.0, res(cl.font).map_or(t.cell_text, |c| t.on_sheet_over(c, paper, theme::INK_TEXT_MIN)));
+            for (side, edge) in [
+                (b.top, Rect::from_min_max(cr.left_top(), pos2(cr.right(), cr.top() + 1.0))),
+                (b.bottom, Rect::from_min_max(pos2(cr.left(), cr.bottom() - 1.0), cr.right_bottom())),
+                (b.left, Rect::from_min_max(cr.left_top(), pos2(cr.left() + 1.0, cr.bottom()))),
+                (b.right, Rect::from_min_max(pos2(cr.right() - 1.0, cr.top()), cr.right_bottom())),
+            ] {
+                if let Some(c) = line(side, paper) {
+                    p.rect_filled(edge, 0.0, c);
+                }
+            }
         }
     }
-    p.rect_stroke(r, 0.0, Stroke::new(1.0, t.separator), StrokeKind::Inside);
 }
 
+/// The Cell Styles gallery: each built-in style as a button showing its fill, font and border,
+/// drawn as it will look on the current sheet; a click applies it to the selection.
 pub(super) fn cell_style_gallery(app: &mut SheetApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     ui.set_width(520.0);
@@ -112,26 +133,23 @@ pub(super) fn cell_style_gallery(app: &mut SheetApp, ui: &mut Ui) {
             for (i, n) in names.iter().enumerate() {
                 let st = gridcraft_engine::cmd::format::builtin_cell_style(n, &wb.theme).unwrap_or_default();
                 let (r, resp) = ui.allocate_exact_size(vec2(82.0, 24.0), Sense::click());
-                let fill = st
-                    .fill
-                    .fg
-                    .resolve(&wb.theme)
-                    .filter(|_| st.fill.pattern != gridcraft_engine::model::PatternType::None)
-                    .map(theme::color32)
-                    .map(|c| if t.dark_sheet { theme::ink(c) } else { c })
-                    .unwrap_or(t.grid_bg);
-                let ink = |c: Color32, min| if t.dark_sheet { theme::ink_guarded(c, fill, min) } else { c };
+                // The authored fill (white where there is none) is what the text and border were
+                // chosen against; the painted fill is mapped on the dark sheet.
+                let authored =
+                    st.fill.fg.resolve(&wb.theme).filter(|_| st.fill.pattern != gridcraft_engine::model::PatternType::None).map(theme::color32);
+                let fill = authored.map_or(t.grid_bg, |c| t.on_sheet(c));
+                let paper = authored.unwrap_or(Color32::WHITE);
+                let ink = |c: Option<Color32>, min| t.on_sheet_over(c.unwrap_or(Color32::BLACK), paper, min);
                 ui.painter().rect_filled(r, 0.0, fill);
                 ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, t.separator), StrokeKind::Inside);
                 if !st.borders.bottom.is_none() {
-                    let c = st.borders.bottom.color.resolve(&wb.theme).map(theme::color32).unwrap_or(t.cell_text);
-                    let c = ink(c, theme::INK_LINE_MIN);
+                    let c = ink(st.borders.bottom.color.resolve(&wb.theme).map(theme::color32), theme::INK_LINE_MIN);
                     ui.painter().line_segment(
                         [r.left_bottom() + vec2(0.0, -1.5), r.right_bottom() + vec2(0.0, -1.5)],
                         Stroke::new(st.borders.bottom.style.width(), c),
                     );
                 }
-                let col = ink(st.font.color.resolve(&wb.theme).map(theme::color32).unwrap_or(t.cell_text), theme::INK_TEXT_MIN);
+                let col = ink(st.font.color.resolve(&wb.theme).map(theme::color32), theme::INK_TEXT_MIN);
                 let fam = theme::cell_family(&st.font.name, st.font.bold, st.font.italic);
                 ui.painter().text(
                     r.left_center() + vec2(4.0, 0.0),

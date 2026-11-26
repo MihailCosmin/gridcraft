@@ -26,9 +26,9 @@ GridCraft evaluates ordinary formulas with array semantics even when the final r
 
 The exporter inspects the parsed formula without evaluating it. It distinguishes range-taking functions such as `SUM` from scalar arguments and operators: `SUM(A1:A3)` and `A1*2` stay ordinary, while `SUM(A1:A3*B1:B3)` and `SQRT(A1:A3)` retain array evaluation. Legacy array-aware contexts such as `SUMPRODUCT` do not need an extra marker. Explicit `@` scalarizes its result without hiding array-sensitive operations inside it.
 
-Names are resolved using workbook/sheet scope, and structured references distinguish one table-row cell from a column. Literal `INDIRECT` and `INDEX` arguments permit tighter classification; unresolved reference dimensions are conservatively treated as potentially multiple cells. Name/AST traversal is bounded, with array preservation as the fallback. This is an export classifier, not a claim of exact Excel metadata parity for every function or user-defined function. It stays within the format crate's existing dependencies and does not change calculation or import behavior.
+Names are resolved using workbook/sheet scope, and structured references distinguish one table-row cell from a column. Literal `INDIRECT` and `INDEX` arguments permit tighter classification; unresolved reference dimensions are conservatively treated as potentially multiple cells. Name/AST traversal is bounded. A formula whose array behaviour the analysis doesn't know (a user-defined or unknown function, an uncertain parameter, a recursive name) is saved with `cm`, unless it has an explicit `@` (below). One without an explicit `@` that the analysis cannot finish, but whose parts are all known, is saved as read, without `cm`. One with an explicit `@` that the analysis cannot finish or doesn't know is saved as the legacy text the reader turns back into it (the formula without its `@`, or without a whole-formula `@`) when there is one, and with `cm` otherwise. This is an export classifier, not a claim of exact Excel metadata parity for every function or user-defined function. It stays within the format crate's existing dependencies.
 
-This is a writer policy; interpreting implicit intersection in imported legacy formulas remains separate work. See Microsoft's [Formula vs. Formula2 documentation](https://learn.microsoft.com/en-us/office/vba/excel/concepts/cells-and-ranges/range-formula-vs-formula2).
+The reader applies the same classification in reverse: a formula without dynamic-array metadata (`cm`) and not entered as a CSE array is a legacy formula, and gets the `@` Excel implies where a range meets a single-value parameter, an operator or the cell result. Inside SUMPRODUCT and other array-evaluating parameters, IF's condition and IFERROR's and IFNA's arguments are still intersected, as legacy Excel does without Ctrl+Shift+Enter; IF's results are not. The writer drops an `@` that legacy Excel would imply (also when an edit has shrunk its range to one cell) and saves that formula without `cm`; an `@` of a single value stays `_xlfn.SINGLE` in that legacy formula, as Excel writes it; any other `@` makes the formula a dynamic-array one. A legacy formula too large to analyse, or using functions whose legacy argument semantics are unknown (the array arguments of dynamic-array functions, LAMBDA), is read as it is with only a whole-formula `@` when its result may be several values, so it never spills, and is saved as it was read, without `cm`. Which names are built-in functions and which parameters take a single value comes from the function library, which the format crate may not depend on: the caller passes a `gridcraft_xlsx::FunctionInfo` (`read_xlsx_with`, `write_xlsx_with`; the engine supplies the library's answers), and `read_xlsx`/`write_xlsx`/`write_xlsx_as` use the crate's own table alone. See Microsoft's [Formula vs. Formula2 documentation](https://learn.microsoft.com/en-us/office/vba/excel/concepts/cells-and-ranges/range-formula-vs-formula2).
 
 ## Static cell pictures
 
@@ -95,7 +95,10 @@ LaTeX subset:
   access. Indexing is not counted; the fuzz run covers it.
 - **Fuzzing.** 70,000 random token strings and 50,000 mutations of valid equations: no panic,
   no input slower than 5 ms. Self-referencing and exponential macros stop at the parser's
-  1,000-expansion limit. Nesting deeper than 32 is refused ("Recursion limit exceeded"), and
+  1,000-expansion limit, which counts expansions and not their size: a definition whose
+  argument doubles on every call never reaches it. The wrapper therefore refuses macro
+  definitions (`\def`, `\newcommand`, `\let` and the like) before RaTeX sees the source, and
+  caps the padded size of matrices at 2,500 cells. Nesting deeper than 32 is refused ("Recursion limit exceeded"), and
   the deepest accepted input needs under 256 KB of stack in a release build, well inside the
   smallest main-thread stack we run on (1 MB on Windows). Absurd sizes (`\rule{1e308em}{1em}`)
   lay out with huge dimensions, so the wrapper caps them.
@@ -125,16 +128,13 @@ gate on every test run, so a version bump has to pass it. RaTeX positions glyphs
 font metrics; GridCraft never bundles the KaTeX fonts, so glyphs are drawn with system fonts
 and a glyph no font has is drawn as a `[?]` box.
 
-## The dark sheet is an opt-in view setting with WordCraft's colour rule (#1264)
+## The dark sheet, dark charts and dark pictures are opt-in view settings (#1264)
 
-*Revised 05.11.2026: the user returned to this opt-in design after trying one switch for both
-(04.11.2026, tasklist H3).* The command is `view.darkSheet`.
-
-The dark sheet (light text on dark cells) is a user preference, off by default and separate
-from Display theme, turned on from View › Switch Modes or File › Options, as WordCraft's dark
-page (storytold/wordcraft#194). Changing the default look for everyone stays the maintainers'
-decision, so neither Display theme Dark nor System darkens the cells. On screen only, every
+Three user preferences show the workbook light-on-dark on screen: the cells (`view.darkSheet`),
+charts (`view.darkCharts`) and pictures (`view.darkPictures`). They are off by default and
+separate from Display theme and from each other, turned on from the View tab or File › Options,
+like WordCraft's dark page (storytold/wordcraft#194). Display theme Dark and System do not turn
+them on: that would change the default look for everyone, a product decision (#177). Every
 workbook colour has its HSL lightness inverted with hue and saturation kept, lifted so white
-becomes `#333333`; a contrast guard lifts mapped text that would fall below 4.5:1 (or below
-the authored contrast, if lower). Pictures, files, printing and export are unchanged. Details:
-`docs/dark-sheet.md`.
+becomes `#333333`; a contrast guard keeps mapped text at min(4.5:1, the authored contrast).
+Files, printing and export are unchanged. Details: `docs/dark-sheet.md`.

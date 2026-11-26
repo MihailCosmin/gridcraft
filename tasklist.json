@@ -386,13 +386,13 @@
     {
       "id": "gridcraft-N10",
       "section": "rework",
-      "status": "todo",
+      "status": "done",
       "group": "",
       "model": "sonnet",
       "effort": "medium",
       "short": "Bring the dark-sheet fixes from the PR branch back to the fork's main",
-      "details": "The PR branch dark-sheet-opt-in (from upstream main 1fb19157) differs from the fork's main: it keeps the light sheet exactly as upstream (freeze line gray 150, drag outlines gray 90/110, dark-interface tints), drops the split-cursor and Format Cells changes, adds dark values for the form-control tokens, fixes the guard in the border preview and the table/cell style galleries (they passed mapped colours as the authored background, so the Normal style's text was invisible on the dark sheet), and adds Tokens::on_sheet/on_sheet_over. Merge upstream main into the fork's main (or reset the dark-sheet files to the PR branch's versions) keeping the N2/N3/H5 fixes, run fmt, clippy and ui-egui tests, push.",
-      "done": null
+      "details": "The PR branch dark-sheet-opt-in (from upstream main 1fb19157) differs from the fork's main: it keeps the light sheet exactly as upstream (freeze line gray 150, drag outlines gray 90/110, dark-interface tints), drops the split-cursor and Format Cells changes, adds dark values for the form-control tokens, fixes the guard in the border preview and the table/cell style galleries (they passed mapped colours as the authored background, so the Normal style's text was invisible on the dark sheet), and adds Tokens::on_sheet/on_sheet_over. Merge upstream main into the fork's main (or reset the dark-sheet files to the PR branch's versions) keeping the N2/N3/H5 fixes, run fmt, clippy and ui-egui tests, push. Done 26.11.2026: merged dark-sheet-opt-in (abac35bd, includes upstream main) into the fork main; 22 conflicts (ui-egui dark-sheet files, tests, docs, ROADMAP) resolved to the PR branch versions; N2/N3/H5 changes came through unconflicted. cargo fmt --check and clippy -p gridcraft-ui-egui --all-targets -D warnings clean; ui-egui dark_ tests 21 passed. Full ui-egui suite left to the daily run.",
+      "done": "2026-11-26T15:56:09"
     },
     {
       "id": "gridcraft-N11",

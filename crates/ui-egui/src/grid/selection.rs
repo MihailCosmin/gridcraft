@@ -90,6 +90,8 @@ pub(crate) struct SelectionPaintInput<'a> {
     pub(crate) cols: (u32, u32),
 }
 
+/// Paints the selection of one pane: the fill of every area except the active cell, the active
+/// cell's frame, the outline (a formula's reference outlines while editing one) and the fill handle.
 pub(crate) fn paint_selection(input: SelectionPaintInput<'_>) {
     let SelectionPaintInput { painter: p, geo, sheet: sh, selection: sel, outline, tokens: t, app, rows, cols } = input;
     // Fill all areas except the active cell.
@@ -153,7 +155,7 @@ pub(crate) fn paint_selection(input: SelectionPaintInput<'_>) {
         let moved = RangeRef::new(*to, to.offset_clamped(r.height() as i64 - 1, r.width() as i64 - 1));
         if range_in_pane(moved, rows, cols) {
             let rr = geo.range_rect(sh, moved);
-            p.rect_stroke(rr, 0.0, Stroke::new(2.0, t.sheet_drag_outline), StrokeKind::Middle);
+            p.rect_stroke(rr, 0.0, Stroke::new(2.0, t.sheet_move_outline), StrokeKind::Middle);
         }
     }
     if let crate::grid::Drag::MoveCols { before: Some(before), .. } = &app.grid.drag {

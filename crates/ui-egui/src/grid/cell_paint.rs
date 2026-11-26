@@ -13,6 +13,8 @@ pub(super) struct Look {
     /// The authored colour behind the cell's text and borders (its fill, or white): what the
     /// contrast guard measures the authored pairs against.
     pub(super) paper: Color32,
+    /// The colour painted behind them (`fill`, or the sheet): what the guarded ink must read on.
+    pub(super) behind: Color32,
     /// Painted on the dark sheet.
     pub(super) dark: bool,
 }
@@ -20,28 +22,30 @@ pub(super) struct Look {
 impl Look {
     /// Display colour of a text colour drawn in this cell (a number format's `[Red]`, say).
     pub(super) fn text_ink(&self, c: Color32) -> Color32 {
-        sheet_ink(c, self.paper, theme::INK_TEXT_MIN, self.dark)
+        painted_ink(c, self.paper, self.behind, theme::INK_TEXT_MIN, self.dark)
     }
 
     /// Display colour of a border line of this cell.
     pub(super) fn line_ink(&self, c: Color32) -> Color32 {
-        sheet_ink(c, self.paper, theme::INK_LINE_MIN, self.dark)
+        painted_ink(c, self.paper, self.behind, theme::INK_LINE_MIN, self.dark)
     }
 }
 
+/// A workbook colour resolved against the theme, or `default` when it does not resolve.
 pub(super) fn col32(c: Color, wb: &Workbook, default: Color32) -> Color32 {
     c.resolve(&wb.theme).map(theme::color32).unwrap_or(default)
 }
 
 /// A workbook fill colour as painted: as authored, or mapped by the dark-sheet rule.
-pub(super) fn sheet_fill(c: Color32, dark: bool) -> Color32 {
+pub(super) fn painted_fill(c: Color32, dark: bool) -> Color32 {
     if dark { theme::ink(c) } else { c }
 }
 
 /// A workbook colour drawn over the authored `paper` (text, a border), as painted: as authored,
-/// or mapped and held legible by the contrast guard on the dark sheet.
-pub(super) fn sheet_ink(c: Color32, paper: Color32, min_ratio: f32, dark: bool) -> Color32 {
-    if dark { theme::ink_guarded(c, paper, min_ratio) } else { c }
+/// or mapped and held legible by the contrast guard against `behind`, the colour painted under it,
+/// on the dark sheet.
+pub(super) fn painted_ink(c: Color32, paper: Color32, behind: Color32, min_ratio: f32, dark: bool) -> Color32 {
+    if dark { theme::ink_guarded_on(c, paper, behind, min_ratio) } else { c }
 }
 
 /// A pattern fill drawn as one colour: a quarter foreground, three quarters background.
@@ -68,7 +72,7 @@ pub(super) fn center_across_end(start: u32, limit: u32, continues: impl Fn(u32) 
 pub(super) fn look(wb: &Workbook, si: usize, sh: &Sheet, c: CellRef, cf: &mut CfCache, dark: bool) -> (Look, Option<CfLook>) {
     let mut style = wb.styles.get(sh.style_id(c)).clone();
     if let Some(t) = sh.table_at(c) {
-        style = gridcraft_engine::tables::table_cell_style(wb, si, t, c);
+        style = gridcraft_engine::tables::table_cell_shown_style(wb, si, t, cf.table_edges(sh, t), c);
     }
     let cfl = cf.look(wb, si, c);
     if let Some(l) = &cfl
@@ -96,6 +100,9 @@ pub(super) fn look(wb: &Workbook, si: usize, sh: &Sheet, c: CellRef, cf: &mut Cf
         if st.num_fmt.as_str() != "General" {
             style.num_fmt = st.num_fmt.clone();
         }
+        if st.align.reading_order.is_some() {
+            style.align.reading_order = st.align.reading_order;
+        }
         for (dst, src) in [
             (&mut style.borders.left, st.borders.left),
             (&mut style.borders.right, st.borders.right),
@@ -110,25 +117,27 @@ pub(super) fn look(wb: &Workbook, si: usize, sh: &Sheet, c: CellRef, cf: &mut Cf
     // (authored, painted) fill.
     let mut fill = match style.fill.pattern {
         PatternType::None => None,
-        PatternType::Solid => style.fill.fg.resolve(&wb.theme).map(theme::color32).map(|f| (f, sheet_fill(f, dark))),
+        PatternType::Solid => style.fill.fg.resolve(&wb.theme).map(theme::color32).map(|f| (f, painted_fill(f, dark))),
         _ => {
             // Patterns: approximate with a blend of foreground and background, each mapped.
             let fg = style.fill.fg.resolve(&wb.theme).map_or(Color32::BLACK, theme::color32);
             let bg = style.fill.bg.resolve(&wb.theme).map_or(Color32::WHITE, theme::color32);
-            Some((pattern_blend(fg, bg), pattern_blend(sheet_fill(fg, dark), sheet_fill(bg, dark))))
+            Some((pattern_blend(fg, bg), pattern_blend(painted_fill(fg, dark), painted_fill(bg, dark))))
         }
     };
     if let Some(l) = &cfl
         && let Some(rgb) = l.scale_fill
     {
         let f = theme::color32(rgb);
-        fill = Some((f, sheet_fill(f, dark)));
+        fill = Some((f, painted_fill(f, dark)));
     }
     let paper = fill.map_or(Color32::WHITE, |(authored, _)| authored);
+    // A pattern's painted blend is not ink() of its authored blend: guard against what is drawn.
+    let behind = fill.map_or(painted_fill(Color32::WHITE, dark), |(_, painted)| painted);
     // Automatic, Text 1 / Background 1, hyperlinks, cell and table styles: all resolved to a colour
     // first, then the one rule.
-    let text_color = sheet_ink(col32(style.font.color, wb, Color32::BLACK), paper, theme::INK_TEXT_MIN, dark);
-    (Look { style, fill: fill.map(|(_, painted)| painted), text_color, paper, dark }, cfl)
+    let text_color = painted_ink(col32(style.font.color, wb, Color32::BLACK), paper, behind, theme::INK_TEXT_MIN, dark);
+    (Look { style, fill: fill.map(|(_, painted)| painted), text_color, paper, behind, dark }, cfl)
 }
 
 /// Text for a value with General narrowing to the available width.
@@ -168,11 +177,10 @@ pub(super) fn display_text(
 }
 
 pub(crate) fn wrapped_cell_text_y(valign: VAlign, rect: Rect, gh: f32, z: f32) -> f32 {
-    let pad_v = 1.5 * z;
-    let y_top = rect.top() + pad_v;
+    let y_top = rect.top() + 1.5 * z;
     // Not clamped to `y_top`: text taller than the row overflows upward (Bottom) or both ways
     // (Center), and the cell's clip rect trims it, so Middle and Bottom stay distinct from Top.
-    let y_bottom = rect.bottom() - gh - pad_v;
+    let y_bottom = rect.bottom() - gh - 0.5 * z;
     match valign {
         VAlign::Top => y_top,
         VAlign::Center | VAlign::Justify | VAlign::Distributed => (y_top + y_bottom) / 2.0,
@@ -180,15 +188,29 @@ pub(crate) fn wrapped_cell_text_y(valign: VAlign, rect: Rect, gh: f32, z: f32) -
     }
 }
 
+/// Bounds of the primary font's line boxes, excluding extra row height added only for fallbacks.
+/// Centered fallbacks do not identify that baseline; empty or centered-only rows use their layout bounds.
+pub(crate) fn galley_baseline_bounds(galley: &egui::Galley) -> (f32, f32) {
+    let row_bounds = |row: &egui::epaint::text::PlacedRow| {
+        row.glyphs
+            .iter()
+            .find(|glyph| {
+                glyph.font_face_align == egui::epaint::text::FallbackAlign::Baseline
+                    || (glyph.font_face_ascent == glyph.font_ascent && glyph.font_face_height == glyph.font_height)
+            })
+            .map_or((row.rect().top(), row.rect().bottom()), |glyph| {
+                let top = row.pos.y + glyph.pos.y - glyph.font_ascent;
+                (top, top + glyph.font_height)
+            })
+    };
+    let first = galley.rows.first().map(|row| row_bounds(row).0);
+    let last = galley.rows.last().map(|row| row_bounds(row).1);
+    first.zip(last).unwrap_or((0.0, galley.size().y))
+}
+
 pub(crate) fn cell_text_y(valign: VAlign, rect: Rect, gh: f32, z: f32) -> f32 {
-    let top_inset = 1.0 * z;
-    let y_top = rect.top() - top_inset;
-    let y_bottom = (rect.bottom() - gh - 0.5 * z).max(y_top);
-    match valign {
-        VAlign::Top => y_top,
-        VAlign::Center | VAlign::Justify | VAlign::Distributed => (y_top + y_bottom) / 2.0,
-        VAlign::Bottom => y_bottom,
-    }
+    let y_top = wrapped_cell_text_y(VAlign::Top, rect, gh, z);
+    wrapped_cell_text_y(valign, rect, gh, z).max(y_top)
 }
 
 /// Where to put a `TextShape` holding a galley of `size` turned by `angle` (egui radians, so
