@@ -375,13 +375,13 @@
     {
       "id": "gridcraft-N9",
       "section": "rework",
-      "status": "todo",
+      "status": "done",
       "group": "",
       "model": "sonnet",
       "effort": "medium",
       "short": "Dark sheet: map sparklines, shapes, text boxes, Draw ink and Page Layout headers",
-      "details": "Known gaps of the dark sheet PR (DS16), listed in its description and docs/dark-sheet.md: (1) sparklines are painted with chartview::paint_prims, so they keep authored colours on the dark sheet (dark blue lines on #333333); call paint_prims_dark with the dark-sheet flag in grid/quadrant.rs paint_sparklines; (2) shapes, text boxes and Draw ink in chartview::paint_objects keep authored fill, line and text colours (a text box with automatic black text and no fill is hard to read); map fill with Tokens::on_sheet, lines and ink with on_sheet_over(.., WHITE, INK_LINE_MIN), text with on_sheet_over against the authored fill, and use the same text colour in the in-place text box editor (text_box.rs .text_color(BLACK)); (3) Page Layout view draws header and footer text Color32::BLACK and the placeholders in fixed greys (paper_view.rs ~186, 259, 266, 298) on the dark paper; use t.cell_text and Tokens::on_sheet. Add pixel tests like tests/it/dark_sheet_setting.rs. Push to the PR branch as new commits if the PR is still open, else a follow-up PR.",
-      "done": null
+      "details": "Known gaps of the dark sheet PR (DS16), listed in its description and docs/dark-sheet.md: (1) sparklines are painted with chartview::paint_prims, so they keep authored colours on the dark sheet (dark blue lines on #333333); call paint_prims_dark with the dark-sheet flag in grid/quadrant.rs paint_sparklines; (2) shapes, text boxes and Draw ink in chartview::paint_objects keep authored fill, line and text colours (a text box with automatic black text and no fill is hard to read); map fill with Tokens::on_sheet, lines and ink with on_sheet_over(.., WHITE, INK_LINE_MIN), text with on_sheet_over against the authored fill, and use the same text colour in the in-place text box editor (text_box.rs .text_color(BLACK)); (3) Page Layout view draws header and footer text Color32::BLACK and the placeholders in fixed greys (paper_view.rs ~186, 259, 266, 298) on the dark paper; use t.cell_text and Tokens::on_sheet. Add pixel tests like tests/it/dark_sheet_setting.rs. Push to the PR branch as new commits if the PR is still open, else a follow-up PR. Done 26.11.2026: all three gaps fixed on PR branch dark-sheet-opt-in (commit abac35bd): paint_sparklines uses paint_prims_dark; paint_objects maps shape fill/line/ink/text via Tokens::on_sheet/on_sheet_over and chartview::shape_text_color (also used by the text box editor); paper_view.rs header/footer/placeholder colours use t.cell_text/on_sheet. Pixel tests in tests/it/dark_sheet_objects.rs (pass; they return early without a GPU); clippy -D warnings clean; docs/dark-sheet.md updated.",
+      "done": "2026-11-26T15:25:13"
     },
     {
       "id": "gridcraft-N10",
