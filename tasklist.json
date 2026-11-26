@@ -430,13 +430,13 @@
     {
       "id": "gridcraft-N15",
       "section": "rework",
-      "status": "todo",
+      "status": "done",
       "group": "",
       "model": "sonnet",
       "effort": "medium",
       "short": "Answer new reviews on PR #3431; merge upstream main again if it goes conflicting",
-      "details": "Continues gridcraft-N13. Branch merged with upstream main ec12eba8 in 5d3d4dbb; doc comments for CodeRabbit's docstring check in 8ce26d6d. Watch for CodeRabbit's re-review (does the docstring check now pass?), eliets2 and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts: keep both sides' doc header entries and revision rows; no force-push), reply. The workflows awaiting approval need a maintainer.",
-      "done": null
+      "details": "Continues gridcraft-N13. Branch merged with upstream main ec12eba8 in 5d3d4dbb; doc comments for CodeRabbit's docstring check in 8ce26d6d. Watch for CodeRabbit's re-review (does the docstring check now pass?), eliets2 and maintainer reviews; verify each point against the code in D:\\ClaudeData\\worktrees\\gridcraft-DS16, fix, run fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings and the ui-egui tests, push new commits (merge main for conflicts: keep both sides' doc header entries and revision rows; no force-push), reply. The workflows awaiting approval need a maintainer. Done 26.11.2026: no new review comments since 14.11 (only c4bler's non-technical remark). PR was CONFLICTING after upstream main 4870243e; merged it in the DS16 worktree (conflicts in docs/ui-parity.md Last updated header and snapshot.rs usage doc: both sides kept), pushed to fork/dark-sheet-opt-in. Verified: fmt, clippy -p gridcraft-ui-egui --all-targets -D warnings, cargo test -p gridcraft-ui-egui dark pass.",
+      "done": "2026-11-26T16:09:33"
     },
     {
       "id": "gridcraft-N16",
